@@ -65,8 +65,8 @@ internal class ProductEntryDataSourceImpl(
 
     override suspend fun insertAll(entries: List<ProductEntry>) {
         withContext(Dispatchers.IO) {
+            val oldData = queries.getAllEntries().executeAsList()
             queries.transaction {
-                val oldData = queries.getAllEntries().executeAsList()
                 val toDelete = oldData.filter { entries.none { newProduct -> newProduct.id.toLong() == it.id } }
                 entries.forEach { entry ->
                     queries.insertEntry(

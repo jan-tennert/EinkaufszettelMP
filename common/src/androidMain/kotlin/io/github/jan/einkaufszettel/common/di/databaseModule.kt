@@ -6,6 +6,6 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-actual fun databaseModule(): Module = module {
+actual val databaseModule: Module = module {
     single { createDatabase(DriverFactory(androidContext())) }
 }

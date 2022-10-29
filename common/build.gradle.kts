@@ -56,6 +56,12 @@ kotlin {
                 api("androidx.activity:activity-compose:${Versions.ACTIVITY_COMPOSE}")
                 api("androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.LIFECYCLE}")
                 api("androidx.lifecycle:lifecycle-viewmodel-compose:${Versions.LIFECYCLE}")
+                api("com.google.accompanist:accompanist-permissions:${Versions.PERMISSIONS}")
+                api("androidx.camera:camera-core:${Versions.CAMERAX}")
+                api("androidx.camera:camera-camera2:${Versions.CAMERAX}")
+                api("androidx.camera:camera-lifecycle:${Versions.CAMERAX}")
+                api("androidx.camera:camera-view:${Versions.CAMERAX}")
+                api("com.google.mlkit:barcode-scanning:${Versions.BARCODE}")
             }
         }
         val androidTest by getting

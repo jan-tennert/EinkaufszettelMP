@@ -6,7 +6,7 @@ import io.github.jan.einkaufszettel.common.data.local.EinkaufszettelDatabase
 
 actual class DriverFactory {
     actual fun createDriver(): SqlDriver {
-        val driver = JdbcSqliteDriver("jdbc:sqlite:einkaufszettel.db")
+        val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         EinkaufszettelDatabase.Schema.create(driver)
         return driver
     }

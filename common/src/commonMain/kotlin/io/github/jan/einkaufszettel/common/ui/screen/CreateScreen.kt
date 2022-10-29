@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +18,7 @@ import einkaufszettel.db.LocalUserDto
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
 import io.github.jan.einkaufszettel.common.data.remote.FileInfo
 import io.github.jan.einkaufszettel.common.toComposeImage
+import io.github.jan.einkaufszettel.common.ui.components.ActionButton
 import io.github.jan.einkaufszettel.common.ui.components.ImageChooser
 import io.github.jan.einkaufszettel.common.ui.components.UserCard
 import io.github.jan.einkaufszettel.common.ui.dialog.UserAddDialog
@@ -127,31 +127,25 @@ fun CreateScreen(
             }
         }
     }
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomStart
-    ) {
-        FloatingActionButton({
-            back()
-        }, modifier = Modifier.padding(10.dp), shape = RoundedCornerShape(100)) {
-            Icon(LocalIcon.ArrowBack, "Zurück")
-        }
+
+    ActionButton(Alignment.BottomStart, back) {
+        Icon(LocalIcon.ArrowBack, "Zurück")
     }
 
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomEnd
     ) {
-        FloatingActionButton(
+        ActionButton(
+            location = Alignment.BottomEnd,
             onClick = {
-                if(name.isNotBlank() && (fileInfo != null || oldImage != null)) {
+                if (name.isNotBlank() && (fileInfo != null || oldImage != null)) {
                     create(name, fileInfo, authorizedUsers.map { it.id })
                     back()
                 } else {
                     viewModel.events.add(UIEvent.Alert("Bitte gib einen Namen an und wähle ein Icon aus"))
                 }
-            },
-            modifier = Modifier.padding(10.dp), shape = RoundedCornerShape(100),
+            }
         ) {
             Icon(LocalIcon.Done, "Fertig")
         }

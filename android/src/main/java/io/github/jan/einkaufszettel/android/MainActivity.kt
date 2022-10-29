@@ -44,8 +44,7 @@ class MainActivity : ComponentActivity() {
                     while(isActive && viewModel.supabaseClient.gotrue.currentSessionOrNull() == null) {
                         delay(500)
                     }
-                    viewModel.retrieveProducts()
-                    viewModel.retrieveShops()
+                    viewModel.retrieveAll()
                     viewModel.retrieveProfile(false)
                     viewModel.connectToRealtime()
                 }

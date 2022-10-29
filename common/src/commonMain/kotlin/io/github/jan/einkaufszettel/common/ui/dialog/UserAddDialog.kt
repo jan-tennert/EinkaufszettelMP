@@ -23,12 +23,18 @@ import io.github.jan.einkaufszettel.common.ui.theme.topPadding
 import io.github.jan.supabase.CurrentPlatformTarget
 import io.github.jan.supabase.PlatformTarget
 
+sealed interface UserAddDialogState {
+    object None : UserAddDialogState
+    object WithId: UserAddDialogState
+    object WithQRCode: UserAddDialogState
+}
+
 @Composable
 fun UserAddDialog(viewModel: EinkaufszettelViewModel, close: () -> Unit) {
     val darkMode by viewModel.darkMode.collectAsState(EinkaufszettelSettings.DarkMode.NOT_SET)
-    var showEnterId by remember { mutableStateOf(false) }
-    when {
-        showEnterId -> {
+    var state by remember { mutableStateOf<UserAddDialogState>(UserAddDialogState.None) }
+    when(state) {
+        UserAddDialogState.WithId -> {
             Dialog(close, "Benutzer hinzufügen", darkMode) {
                 Box(
                     modifier = Modifier.background(MaterialTheme.colorScheme.background, RoundedCornerShape(20.dp))
@@ -63,21 +69,26 @@ fun UserAddDialog(viewModel: EinkaufszettelViewModel, close: () -> Unit) {
                 }
             }
         }
-        else -> {
+        UserAddDialogState.WithQRCode -> {
+            UserQRCodeDialog(viewModel, close)
+        }
+        UserAddDialogState.None -> {
             Dialog(close, "Benutzer hinzufügen", darkMode) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Button(
                         onClick = {
-                            showEnterId = true
+                            state = UserAddDialogState.WithId
                         }
                     ) {
                         Text("User Id eingeben")
                     }
                     if(CurrentPlatformTarget != PlatformTarget.DESKTOP) {
                         Button(
-                            onClick = {},
+                            onClick = {
+                                state = UserAddDialogState.WithQRCode
+                            },
                             modifier = Modifier.padding(top = MaterialTheme.topPadding)
                         ) {
                             Text("QR Code scannen")

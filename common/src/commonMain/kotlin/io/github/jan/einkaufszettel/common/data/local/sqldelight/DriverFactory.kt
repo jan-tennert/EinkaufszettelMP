@@ -1,6 +1,7 @@
 package io.github.jan.einkaufszettel.common.data.local.sqldelight
 
 import com.squareup.sqldelight.db.SqlDriver
+import einkaufszettel.db.CardDto
 import einkaufszettel.db.ProductEntryDto
 import einkaufszettel.db.ShopDto
 import io.github.jan.einkaufszettel.common.data.local.EinkaufszettelDatabase
@@ -12,5 +13,5 @@ expect class DriverFactory {
 }
 
 fun createDatabase(driverFactory: DriverFactory): EinkaufszettelDatabase {
-    return EinkaufszettelDatabase(driverFactory.createDriver(), ProductEntryDto.Adapter(InstantAdapter), ShopDto.Adapter(InstantAdapter, ListToStringAdapter))
+    return EinkaufszettelDatabase(driverFactory.createDriver(), CardDto.Adapter(InstantAdapter, ListToStringAdapter), ProductEntryDto.Adapter(InstantAdapter), ShopDto.Adapter(InstantAdapter, ListToStringAdapter))
 }

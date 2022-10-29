@@ -11,9 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType.Companion.Email
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
+import io.github.jan.einkaufszettel.common.handleEnter
 import io.github.jan.einkaufszettel.common.ui.components.GoogleButton
 import io.github.jan.einkaufszettel.common.ui.components.PasswordField
 import io.github.jan.einkaufszettel.common.ui.dialog.PasswordRecoveryDialog
@@ -49,7 +51,18 @@ fun AuthScreen(viewModel: EinkaufszettelViewModel) {
             password = password,
             onPasswordChanged = { password = it },
             modifier = Modifier.focusRequester(passwordFocus)
-                .padding(top = MaterialTheme.topPadding),
+                .padding(top = MaterialTheme.topPadding)
+                .onPreviewKeyEvent {
+                    it.handleEnter {
+                        authenticate(
+                            signUp,
+                            viewModel,
+                            email,
+                            password
+                        )
+                    }
+                    false
+                },
             imeAction = ImeAction.Done,
             keyboardActions = KeyboardActions(onDone = {
                 authenticate(
@@ -58,7 +71,7 @@ fun AuthScreen(viewModel: EinkaufszettelViewModel) {
                     email,
                     password
                 )
-            })
+            }),
         )
         Button(
             onClick = { authenticate(signUp, viewModel, email, password) },

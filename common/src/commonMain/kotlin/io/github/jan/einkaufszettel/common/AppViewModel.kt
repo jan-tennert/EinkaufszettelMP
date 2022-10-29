@@ -37,6 +37,9 @@ class EinkaufszettelViewModel(
     private val shopDataSource: ShopDataSource,
     private val productEntryDataSource: ProductEntryDataSource,
     private val localUserDataSource: LocalUserDataSource,
+    private val cardApi: CardApi,
+    private val cardDataSource: CardDataSource,
+    private val rootDataSource: RootDataSource,
     private val realtimeChannel: RealtimeChannel,
     val clipboardManager: ClipboardManager,
     val supabaseClient: SupabaseClient
@@ -49,11 +52,13 @@ class EinkaufszettelViewModel(
     val shopFlow = shopDataSource.getAllShops()
     val productEntryFlow = productEntryDataSource.getAllEntries()
     val localUserFlow = localUserDataSource.getUsers()
+    val cardFlow = cardDataSource.getCards()
     val events = mutableStateListOf<UIEvent>()
 
     //realtime
     private var shopChangeFlowJob = MutableStateFlow<Job?>(null)
     private var productChangeFlowJob = MutableStateFlow<Job?>(null)
+    private var cardChangeFlowJob = MutableStateFlow<Job?>(null)
 
     init {
         scope.launch {
@@ -61,11 +66,6 @@ class EinkaufszettelViewModel(
                 if(it != null) {
                     _profileStatus.value = ProfileStatus.Available(it)
                 }
-            }
-        }
-        scope.launch {
-            productEntryFlow.collect {
-                println(it)
             }
         }
     }
@@ -84,6 +84,11 @@ class EinkaufszettelViewModel(
                 table = "shops"
             }.onEach {
                 handleShopChange(it)
+            }.launchIn(scope)
+            cardChangeFlowJob.value = realtimeChannel.postgresChangeFlow<PostgresAction>("public") {
+                table = "cards"
+            }.onEach {
+                handleCardChange(it)
             }.launchIn(scope)
             realtimeChannel.join()
         }
@@ -220,6 +225,30 @@ class EinkaufszettelViewModel(
     }
 
     //actual data
+
+    //for the start (so we don't need 3 transactions)
+    fun retrieveAll() {
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                val currentUserCache = localUserDataSource.retrieveAllUsers().map { it.id }
+                val products = productsApi.retrieveProducts()
+                val shops = shopApi.retrieveShops()
+                val cards = cardApi.retrieveCards()
+                val requiredUsers = (shops.map { it.authorizedUsers.filter { id -> id !in currentUserCache } } + cards.map { it.authorizedUsers?.filter { id -> id !in currentUserCache } ?: emptyList() }).flatten()
+                val users = profileApi.retrieveProfilesFromIds(requiredUsers)
+                println(users)
+                rootDataSource.insertAll(
+                    products = products,
+                    shops = shops,
+                    cards = cards,
+                    users = users
+                )
+            }.onFailure {
+                it.printStackTrace()
+            }
+        }
+    }
+
     fun retrieveProducts() {
         scope.launch(Dispatchers.IO) {
             kotlin.runCatching {
@@ -235,8 +264,19 @@ class EinkaufszettelViewModel(
             kotlin.runCatching {
                 shopApi.retrieveShops()
             }.onSuccess {
-                it.forEach { shops -> checkForNewUsers(shops) }
+                it.forEach { shop -> checkForNewUsers(shop.authorizedUsers) }
                 shopDataSource.insertAll(it)
+            }
+        }
+    }
+
+    fun retrieveCards() {
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                cardApi.retrieveCards()
+            }.onSuccess {
+                it.forEach { card -> checkForNewUsers(card.authorizedUsers ?: emptyList()) }
+                cardDataSource.insertAll(it)
             }
         }
     }
@@ -275,10 +315,10 @@ class EinkaufszettelViewModel(
         }
     }
 
-    private fun checkForNewUsers(shop: Shop) {
+    private fun checkForNewUsers(authorizedUsers: List<String>) {
         scope.launch(Dispatchers.IO) {
             val currentCache = localUserDataSource.retrieveAllUsers().map { it.id }
-            val newUsers = shop.authorizedUsers.filter { it !in currentCache  }
+            val newUsers = authorizedUsers.filter { it !in currentCache  }
             if(newUsers.isNotEmpty()) {
                 retrieveProfiles(newUsers)
             }
@@ -304,13 +344,32 @@ class EinkaufszettelViewModel(
                 is PostgresAction.Delete -> shopDataSource.deleteById(action.oldRecord["id"]?.jsonPrimitive?.longOrNull ?: throw IllegalStateException("Realtime delete without id (shops)"))
                 is PostgresAction.Insert -> {
                     val shop = action.decodeRecordOrNull<Shop>() ?: throw IllegalStateException("Couldn't decode new shop record")
-                    checkForNewUsers(shop)
-                    shopDataSource.insertShop(action.decodeRecordOrNull<Shop>() ?: throw IllegalStateException("Couldn't decode new shop record"))
+                    checkForNewUsers(shop.authorizedUsers)
+                    shopDataSource.insertShop(shop)
                 }
                 is PostgresAction.Update -> {
                     val shop = action.decodeRecordOrNull<Shop>() ?: throw IllegalStateException("Couldn't decode new shop record")
-                    checkForNewUsers(shop)
-                    shopDataSource.insertShop(action.decodeRecordOrNull<Shop>() ?: throw IllegalStateException("Couldn't decode new shop record"))
+                    checkForNewUsers(shop.authorizedUsers)
+                    shopDataSource.insertShop(shop)
+                }
+                else -> {}
+            }
+        }
+    }
+
+    private fun handleCardChange(action: PostgresAction) {
+        scope.launch {
+            when(action ){
+                is PostgresAction.Delete -> cardDataSource.deleteCardById(action.oldRecord["id"]?.jsonPrimitive?.longOrNull ?: throw IllegalStateException("Realtime delete without id (cards)"))
+                is PostgresAction.Insert -> {
+                    val card = action.decodeRecordOrNull<Card>() ?: throw IllegalStateException("Couldn't decode new card record")
+                    checkForNewUsers(card.authorizedUsers ?: emptyList())
+                    cardDataSource.insertCard(card)
+                }
+                is PostgresAction.Update -> {
+                    val card = action.decodeRecordOrNull<Card>() ?: throw IllegalStateException("Couldn't decode new card record")
+                    checkForNewUsers(card.authorizedUsers ?: emptyList())
+                    cardDataSource.insertCard(card)
                 }
                 else -> {}
             }
@@ -419,6 +478,47 @@ class EinkaufszettelViewModel(
             }.onFailure {
                 Napier.e(it) { "Error while deleting shop" }
                 events.add(UIEvent.Alert("Fehler beim Löschen des Shops. Bitte überprüfe deine Internetverbindung"))
+            }
+        }
+    }
+
+    //cards
+    fun createCard(description: String, fileInfo: FileInfo, authorizedUsers: List<String>) {
+        val ownId = supabaseClient.gotrue.currentSessionOrNull()?.user?.id ?: throw IllegalStateException("Session shouldn't be null here")
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                cardApi.createCard(description, authorizedUsers, fileInfo, ownId)
+            }.onSuccess {
+                cardDataSource.insertCard(it)
+            }.onFailure {
+                Napier.e(it) { "Error while creating card" }
+                events.add(UIEvent.Alert("Fehler beim Erstellen der Karte. Bitte überprüfe deine Internetverbindung"))
+            }
+        }
+    }
+
+    fun editCard(id: Long, description: String, authorizedUsers: List<String>) {
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                cardApi.editCard(id.toInt(), description, authorizedUsers)
+            }.onSuccess {
+                cardDataSource.insertCard(it)
+            }.onFailure {
+                Napier.e(it) { "Error while editing card" }
+                events.add(UIEvent.Alert("Fehler beim Bearbeiten der Karte. Bitte überprüfe deine Internetverbindung"))
+            }
+        }
+    }
+
+    fun deleteCard(id: Long, iconPath: String) {
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                cardApi.deleteCard(id.toInt(), iconPath)
+            }.onSuccess {
+                cardDataSource.deleteCardById(id)
+            }.onFailure {
+                Napier.e(it) { "Error while deleting card" }
+                events.add(UIEvent.Alert("Fehler beim Löschen der Karte. Bitte überprüfe deine Internetverbindung"))
             }
         }
     }

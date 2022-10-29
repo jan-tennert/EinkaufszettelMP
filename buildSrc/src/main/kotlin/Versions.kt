@@ -14,5 +14,8 @@ object Versions {
     const val LIFECYCLE = "2.5.1"
     const val ESSENTY = "0.6.0"
     const val QR_CODE = "3.2.0"
+    const val PERMISSIONS = "0.27.0"
+    const val BARCODE = "17.0.2"
+    const val CAMERAX = "1.1.0-beta01"
 
 }

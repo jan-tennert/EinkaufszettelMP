@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,7 +57,7 @@ fun LazyItemScope.ProductEntryCard(product: GetAllEntries, viewModel: Einkaufsze
                 )
             }
             Column {
-                Text(text = product.content, textDecoration = if(product.doneBy != null) TextDecoration.LineThrough else null, modifier = Modifier.fillMaxWidth(0.9f))
+                Text(text = product.content, modifier = Modifier.fillMaxWidth(0.9f))
                 Text(buildAnnotatedString {
                     append(formattedDate)
                     withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {

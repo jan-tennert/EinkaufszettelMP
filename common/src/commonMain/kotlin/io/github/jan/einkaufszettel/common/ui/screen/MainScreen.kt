@@ -11,6 +11,9 @@ import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
 import io.github.jan.einkaufszettel.common.navigation.*
 
 @Composable
+expect fun BackHandle(action: () -> Unit)
+
+@Composable
 fun MainScreen(viewModel: EinkaufszettelViewModel) {
     val navController by rememberNavController(NavigationTarget.Bottom.Home)
     val currentTarget by navController.currentScreen
@@ -30,6 +33,12 @@ fun MainScreen(viewModel: EinkaufszettelViewModel) {
                 }
                 composable(NavigationTarget.Bottom.ShoppingList::class) {
                     ShoppingListScreen(viewModel)
+                }
+                composable(NavigationTarget.Bottom.Cards::class) {
+                    CardScreen(viewModel)
+                }
+                composable(NavigationTarget.Bottom.Scan::class) {
+                    BarCodeScreen(viewModel)
                 }
             }.build()
         }

@@ -2,17 +2,12 @@ package io.github.jan.einkaufszettel.common.ui.screen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -20,9 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import einkaufszettel.db.ShopDto
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
+import io.github.jan.einkaufszettel.common.ui.components.ActionButton
 import io.github.jan.einkaufszettel.common.ui.components.CacheImage
 import io.github.jan.einkaufszettel.common.ui.components.ShopCard
-import io.github.jan.einkaufszettel.common.ui.events.AlertDialog
+import io.github.jan.einkaufszettel.common.ui.dialog.DeleteDialog
 import io.github.jan.einkaufszettel.common.ui.icons.Add
 import io.github.jan.einkaufszettel.common.ui.icons.Delete
 import io.github.jan.einkaufszettel.common.ui.icons.LocalIcon
@@ -49,6 +45,9 @@ fun ShoppingListScreen(viewModel: EinkaufszettelViewModel) {
     AnimatedVisibility(
         visible = shopState is SelectedShop.Normal,
     ) {
+        BackHandle {
+            shopState = SelectedShop.None
+        }
         val shop = (shopState as? SelectedShop.Normal)?.shop ?: return@AnimatedVisibility
         val shopProducts = remember(products) { products.filter { it.shopId == shop.id } }
         ShopScreen(shopProducts, shop.id, viewModel) {
@@ -76,19 +75,17 @@ fun ShoppingListScreen(viewModel: EinkaufszettelViewModel) {
             }
         }
 
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomEnd
-        ) {
-            FloatingActionButton({ shopState = SelectedShop.Create }, modifier = Modifier.padding(10.dp), shape = RoundedCornerShape(100)) {
-                Icon(LocalIcon.Add, "Erstellen")
-            }
-        }
+        ActionButton(Alignment.BottomEnd, { shopState = SelectedShop.Create }, {
+            Icon(LocalIcon.Add, "Erstellen")
+        })
     }
 
     AnimatedVisibility(
         visible = shopState is SelectedShop.Create
     ) {
+        BackHandle {
+            shopState = SelectedShop.None
+        }
         CreateScreen(
             viewModel = viewModel,
             create = { name, fileInfo, authorizedUsers ->
@@ -103,6 +100,9 @@ fun ShoppingListScreen(viewModel: EinkaufszettelViewModel) {
     AnimatedVisibility(
         visible = shopState is SelectedShop.Edit
     ) {
+        BackHandle {
+            shopState = SelectedShop.None
+        }
         val shop = (shopState as? SelectedShop.Edit)?.shop ?: return@AnimatedVisibility
         var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
         CreateScreen(
@@ -119,42 +119,16 @@ fun ShoppingListScreen(viewModel: EinkaufszettelViewModel) {
             shopState = SelectedShop.None
         }
 
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            FloatingActionButton(
-                onClick = {
-                    showDeleteDialog = true
-                },
-                modifier = Modifier.padding(10.dp), shape = RoundedCornerShape(100),
-            ) {
-                Icon(LocalIcon.Delete, "Löschen")
-            }
-        }
+        ActionButton(Alignment.BottomCenter, { showDeleteDialog = true }, {
+            Icon(LocalIcon.Delete, "Löschen")
+        })
 
         if(showDeleteDialog) {
-            AlertDialog(
-                message = "Möchtest du den Eintrag wirklich löschen?",
-                confirmButton = {
-                    Button(onClick = {
-                        viewModel.deleteShop(shop.id, shop.iconUrl)
-                        shopState = SelectedShop.None
-                        showDeleteDialog = false
-                    }) {
-                        Text("Löschen")
-                    }
-                    Button(
-                        onClick = {
-                            showDeleteDialog = false
-                        },
-                        modifier = Modifier.padding(start = 8.dp)
-                    ) {
-                        Text("Abbrechen")
-                    }
-                },
-                close = {
-                    showDeleteDialog = false
+            DeleteDialog(
+                onDismiss = { showDeleteDialog = false },
+                onDelete = {
+                    viewModel.deleteShop(shop.id, shop.iconUrl)
+                    shopState = SelectedShop.None
                 }
             )
         }

@@ -33,8 +33,7 @@ fun RootScreen(viewModel: EinkaufszettelViewModel) {
             LaunchedEffect(Unit) {
                 if(profileStatus !is ProfileStatus.Available) viewModel.retrieveProfile()
                 if(CurrentPlatformTarget == PlatformTarget.DESKTOP) {
-                    viewModel.retrieveProducts()
-                    viewModel.retrieveShops()
+                    viewModel.retrieveAll()
                     viewModel.retrieveProfile(false)
                     viewModel.connectToRealtime()
                 }

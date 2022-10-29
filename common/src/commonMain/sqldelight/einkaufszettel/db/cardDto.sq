@@ -1,0 +1,25 @@
+import kotlinx.datetime.Instant;
+import kotlin.collections.List;
+
+CREATE TABLE cardDto (
+    id INTEGER NOT NULL PRIMARY KEY,
+    createdAt INTEGER AS Instant NOT NULL,
+    ownerId TEXT NOT NULL,
+    imagePath TEXT NOT NULL,
+    description TEXT NOT NULL,
+    authorizedUsers TEXT AS List<String> NOT NULL,
+    FOREIGN KEY (ownerId) REFERENCES localUserDto(id)
+);
+
+getAllCards:
+SELECT card.id, description, createdAt, imagePath, authorizedUsers, owner.username AS owner
+FROM cardDto AS card
+LEFT JOIN localUserDto owner
+ON card.ownerId = owner.id;
+
+insertCard:
+INSERT OR REPLACE
+INTO cardDto VALUES(?, ?, ?, ?, ?, ?);
+
+deleteCardById:
+DELETE FROM cardDto WHERE id = ?;

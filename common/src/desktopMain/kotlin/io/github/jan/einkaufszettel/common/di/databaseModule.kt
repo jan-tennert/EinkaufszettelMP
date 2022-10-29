@@ -5,6 +5,6 @@ import io.github.jan.einkaufszettel.common.data.local.sqldelight.createDatabase
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-actual fun databaseModule(): Module = module {
-    single { createDatabase(DriverFactory()) }
+actual val databaseModule: Module = module {
+    single { println("creating db"); createDatabase(DriverFactory()) }
 }

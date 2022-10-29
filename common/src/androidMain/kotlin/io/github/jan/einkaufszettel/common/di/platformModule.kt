@@ -5,7 +5,7 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
-actual fun platformModule() = module {
+actual val platformModule = module {
     viewModel { createViewModel() }
     single { ClipboardManager(androidContext()) }
 }

@@ -5,13 +5,13 @@ import org.koin.core.context.startKoin
 
 fun initKoin(platformConfiguration: KoinApplication.() -> Unit = {}) = startKoin {
     platformConfiguration()
-
+    println("init koin")
     modules(
-        databaseModule(),
+        databaseModule,
         supabaseModule,
         remoteModule,
         localModule,
         settingsModule,
-        platformModule()
+        platformModule
     )
 }
