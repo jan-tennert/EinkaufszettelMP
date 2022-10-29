@@ -10,6 +10,7 @@ fun initKoin(platformConfiguration: KoinApplication.() -> Unit = {}) = startKoin
         databaseModule,
         supabaseModule,
         remoteModule,
+        updateModule,
         localModule,
         settingsModule,
         platformModule

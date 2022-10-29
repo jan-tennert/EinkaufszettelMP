@@ -20,5 +20,8 @@ fun Scope.createViewModel() = EinkaufszettelViewModel(
     get(),
     get(),
     get(),
+    get(),
+    get(),
+    get(),
     get()
 )

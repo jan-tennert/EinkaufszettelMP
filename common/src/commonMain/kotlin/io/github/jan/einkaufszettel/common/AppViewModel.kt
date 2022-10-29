@@ -40,6 +40,9 @@ class EinkaufszettelViewModel(
     private val cardApi: CardApi,
     private val cardDataSource: CardDataSource,
     private val rootDataSource: RootDataSource,
+    private val githubReleaseApi: AutoUpdater,
+    private val updateInstaller: UpdateInstaller,
+    private val nutritionApi: NutritionApi,
     private val realtimeChannel: RealtimeChannel,
     val clipboardManager: ClipboardManager,
     val supabaseClient: SupabaseClient
@@ -49,9 +52,13 @@ class EinkaufszettelViewModel(
     val sessionStatus = supabaseClient.gotrue.sessionStatus
     private val _profileStatus = MutableStateFlow<ProfileStatus>(ProfileStatus.NotTried)
     val profileStatus = _profileStatus.asStateFlow()
+
+    val nutritionData = MutableStateFlow<NutritionData?>(null)
     val shopFlow = shopDataSource.getAllShops()
     val productEntryFlow = productEntryDataSource.getAllEntries()
     val localUserFlow = localUserDataSource.getUsers()
+    val downloadProgress = MutableStateFlow(0f)
+    val latestVersion = MutableStateFlow(0)
     val cardFlow = cardDataSource.getCards()
     val events = mutableStateListOf<UIEvent>()
 
@@ -67,6 +74,9 @@ class EinkaufszettelViewModel(
                     _profileStatus.value = ProfileStatus.Available(it)
                 }
             }
+        }
+        scope.launch {
+            githubReleaseApi.retrieveNewestVersion().also(::println)
         }
     }
 
@@ -519,6 +529,54 @@ class EinkaufszettelViewModel(
             }.onFailure {
                 Napier.e(it) { "Error while deleting card" }
                 events.add(UIEvent.Alert("Fehler beim Löschen der Karte. Bitte überprüfe deine Internetverbindung"))
+            }
+        }
+    }
+
+    //nutrition
+    fun getNutritionFor(barcode: String) {
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                nutritionApi.retrieveNutritionData(barcode)
+            }.onSuccess {
+                if(it == null) events.add(UIEvent.Alert("Produkt nicht gefunden")) else nutritionData.value = it
+            }.onFailure {
+                Napier.e(it) { "Error while retrieving nutrition data" }
+                events.add(UIEvent.Alert("Fehler beim Abrufen des Produkts. Bitte überprüfe deine Internetverbindung"))
+            }
+        }
+    }
+
+    //settings
+    fun setDarkMode(darkMode: EinkaufszettelSettings.DarkMode) {
+        scope.launch {
+            settings.setDarkMode(darkMode)
+        }
+    }
+
+    //auto update
+    fun retrieveLatestVersion() {
+        scope.launch {
+            kotlin.runCatching {
+                githubReleaseApi.retrieveNewestVersion()
+            }.onSuccess {
+                latestVersion.value = it
+            }.onFailure {
+                Napier.e(it) { "Error while retrieving latest version" }
+            }
+        }
+    }
+
+    fun downloadLatestVersion() {
+        scope.launch {
+            kotlin.runCatching {
+                githubReleaseApi.downloadLatestVersion(latestVersion.value) {
+                    downloadProgress.value = it
+                }
+            }.onSuccess {
+                updateInstaller.install(it)
+            }.onFailure {
+                Napier.e(it) { "Error while downloading latest version" }
             }
         }
     }

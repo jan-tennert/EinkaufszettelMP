@@ -11,8 +11,8 @@ import androidx.compose.ui.Modifier
 import einkaufszettel.db.GetAllEntries
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
 import io.github.jan.einkaufszettel.common.ui.components.ActionButton
-import io.github.jan.einkaufszettel.common.ui.components.CreateEntryDialog
 import io.github.jan.einkaufszettel.common.ui.components.ProductEntryCard
+import io.github.jan.einkaufszettel.common.ui.dialog.CreateEntryDialog
 import io.github.jan.einkaufszettel.common.ui.icons.Add
 import io.github.jan.einkaufszettel.common.ui.icons.ArrowBack
 import io.github.jan.einkaufszettel.common.ui.icons.LocalIcon

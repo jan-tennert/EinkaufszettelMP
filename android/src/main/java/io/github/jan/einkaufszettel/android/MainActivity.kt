@@ -25,6 +25,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel.supabaseClient.handleDeeplinks(intent)
+        val apkFile = cacheDir.resolve("Einkaufszettel.apk")
+        if(apkFile.exists()) apkFile.delete()
         addLifecycleCallback()
         setContent {
             MaterialTheme {
@@ -45,6 +47,7 @@ class MainActivity : ComponentActivity() {
                         delay(500)
                     }
                     viewModel.retrieveAll()
+                    viewModel.retrieveLatestVersion()
                     viewModel.retrieveProfile(false)
                     viewModel.connectToRealtime()
                 }

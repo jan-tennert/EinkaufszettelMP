@@ -1,4 +1,4 @@
-package io.github.jan.einkaufszettel.common.navigation
+package io.github.jan.einkaufszettel.common.ui.navigation
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -15,7 +15,8 @@ sealed interface NavigationTarget {
     val topTitle: String
     val route: String
 
-    sealed class Bottom(override val topTitle: String, override val route: String, val icon: @Composable () -> Unit): NavigationTarget {
+    sealed class Bottom(override val topTitle: String, override val route: String, val icon: @Composable () -> Unit):
+        NavigationTarget {
 
         constructor(topTitle: String, route: String, icon: ImageVector) : this(topTitle, route, { Icon(icon, topTitle) })
         constructor(topTitle: String, route: String, icon: String) : this(topTitle, route, { Icon(resourceIcon(icon), topTitle, modifier = Modifier.size(MaterialIconDimension.dp)) })

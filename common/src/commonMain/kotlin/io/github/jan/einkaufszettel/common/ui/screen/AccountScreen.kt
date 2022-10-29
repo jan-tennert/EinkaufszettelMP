@@ -36,7 +36,8 @@ fun AccountScreen(viewModel: EinkaufszettelViewModel) {
             value = username,
             onValueChange = { username = it },
             leadingIcon = { Icon(LocalIcon.Person, "Name") },
-            modifier = Modifier.focusRequester(focusRequester)
+            modifier = Modifier.focusRequester(focusRequester),
+            label = { Text("Name") },
         )
         Button(
             onClick = {

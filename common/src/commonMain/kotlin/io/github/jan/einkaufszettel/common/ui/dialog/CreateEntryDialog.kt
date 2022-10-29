@@ -1,4 +1,4 @@
-package io.github.jan.einkaufszettel.common.ui.components
+package io.github.jan.einkaufszettel.common.ui.dialog
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
 import io.github.jan.einkaufszettel.common.data.local.EinkaufszettelSettings
 import io.github.jan.einkaufszettel.common.handleEnter
-import io.github.jan.einkaufszettel.common.ui.dialog.Dialog
 import io.github.jan.einkaufszettel.common.ui.theme.topPadding
 
 @Composable

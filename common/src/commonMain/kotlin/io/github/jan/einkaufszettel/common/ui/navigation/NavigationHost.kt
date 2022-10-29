@@ -1,4 +1,4 @@
-package io.github.jan.einkaufszettel.common.navigation
+package io.github.jan.einkaufszettel.common.ui.navigation
 
 import androidx.compose.animation.*
 import androidx.compose.runtime.Composable

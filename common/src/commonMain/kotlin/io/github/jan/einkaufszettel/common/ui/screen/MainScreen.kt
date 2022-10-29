@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
-import io.github.jan.einkaufszettel.common.navigation.*
+import io.github.jan.einkaufszettel.common.ui.navigation.*
 
 @Composable
 expect fun BackHandle(action: () -> Unit)
@@ -39,6 +39,9 @@ fun MainScreen(viewModel: EinkaufszettelViewModel) {
                 }
                 composable(NavigationTarget.Bottom.Scan::class) {
                     BarCodeScreen(viewModel)
+                }
+                composable(NavigationTarget.Bottom.Settings::class) {
+                    SettingsScreen(viewModel)
                 }
             }.build()
         }

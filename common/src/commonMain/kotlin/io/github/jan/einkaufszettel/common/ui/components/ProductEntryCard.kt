@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import einkaufszettel.db.GetAllEntries
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
+import io.github.jan.einkaufszettel.common.ui.dialog.EditEntryDialog
 import io.github.jan.einkaufszettel.common.ui.events.AlertDialog
 import io.github.jan.einkaufszettel.common.ui.icons.Delete
 import io.github.jan.einkaufszettel.common.ui.icons.LocalIcon

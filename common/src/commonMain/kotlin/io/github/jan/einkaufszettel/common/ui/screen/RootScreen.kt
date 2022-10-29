@@ -3,12 +3,10 @@ package io.github.jan.einkaufszettel.common.ui.screen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.jan.einkaufszettel.common.Einkaufszettel
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
 import io.github.jan.einkaufszettel.common.ProfileStatus
 import io.github.jan.supabase.CurrentPlatformTarget
@@ -17,6 +15,15 @@ import io.github.jan.supabase.gotrue.SessionStatus
 
 @Composable
 fun RootScreen(viewModel: EinkaufszettelViewModel) {
+    val version by viewModel.latestVersion.collectAsState()
+    var ignoreVersion by remember { mutableStateOf(false) }
+    if(version != 0 && version > Einkaufszettel.VERSION && !ignoreVersion) {
+        UpdateScreen(viewModel) {
+            ignoreVersion = true
+        }
+        return
+    }
+
     val sessionStatus by viewModel.sessionStatus.collectAsState()
     when(sessionStatus) {
         SessionStatus.LoadingFromStorage -> {
