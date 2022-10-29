@@ -24,10 +24,12 @@ interface ProductEntryDataSource {
 
     suspend fun markEntryUndone(id: Long)
 
+    suspend fun editEntryContent(id: Long, content: String)
+
 }
 
 internal class ProductEntryDataSourceImpl(
-    private val db: EinkaufszettelDatabase
+    db: EinkaufszettelDatabase
 ) : ProductEntryDataSource {
 
     private val queries = db.productEntryQueries
@@ -92,6 +94,12 @@ internal class ProductEntryDataSourceImpl(
     override suspend fun markEntryUndone(id: Long) {
         withContext(Dispatchers.IO) {
             queries.markEntryUndone(id)
+        }
+    }
+
+    override suspend fun editEntryContent(id: Long, content: String) {
+        withContext(Dispatchers.IO) {
+            queries.editEntryContent(content, id)
         }
     }
 

@@ -1,9 +1,6 @@
 package io.github.jan.einkaufszettel.common.ui.screen
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,7 +23,7 @@ fun ShopScreen(products: List<GetAllEntries>, shopId: Long, viewModel: Einkaufsz
     var showEntryCreateDialog by remember { mutableStateOf(false) }
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f)
     ) {
         items(products, { it.id }) {
             ProductEntryCard(it, viewModel)
@@ -50,7 +47,7 @@ fun ShopScreen(products: List<GetAllEntries>, shopId: Long, viewModel: Einkaufsz
         }
     }
 
-    AnimatedVisibility(showEntryCreateDialog) {
+    if(showEntryCreateDialog) {
         CreateEntryDialog(shopId, viewModel, close = { showEntryCreateDialog = false })
     }
 }

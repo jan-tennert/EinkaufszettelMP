@@ -10,3 +10,6 @@ VALUES (?, ?);
 
 getUsers:
 SELECT * FROM localUserDto;
+
+deleteUserById:
+DELETE FROM localUserDto WHERE id = ?;

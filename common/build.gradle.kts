@@ -53,6 +53,7 @@ kotlin {
                 api("androidx.core:core-ktx:${Versions.KTX}")
                 api("com.squareup.sqldelight:android-driver:${Versions.SQLDELIGHT}")
                 api("io.insert-koin:koin-android:${Versions.KOIN_ANDROID}")
+                api("androidx.activity:activity-compose:${Versions.ACTIVITY_COMPOSE}")
                 api("androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.LIFECYCLE}")
                 api("androidx.lifecycle:lifecycle-viewmodel-compose:${Versions.LIFECYCLE}")
             }

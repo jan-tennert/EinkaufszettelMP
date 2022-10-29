@@ -47,8 +47,8 @@ class EinkaufszettelViewModel(
     private val _profileStatus = MutableStateFlow<ProfileStatus>(ProfileStatus.NotTried)
     val profileStatus = _profileStatus.asStateFlow()
     val shopFlow = shopDataSource.getAllShops()
-    val t = MutableStateFlow(0)
     val productEntryFlow = productEntryDataSource.getAllEntries()
+    val localUserFlow = localUserDataSource.getUsers()
     val events = mutableStateListOf<UIEvent>()
 
     //realtime
@@ -63,10 +63,17 @@ class EinkaufszettelViewModel(
                 }
             }
         }
+        scope.launch {
+            productEntryFlow.collect {
+                println(it)
+            }
+        }
     }
 
     fun connectToRealtime() {
         scope.launch {
+            if(supabaseClient.realtime.status.value == Realtime.Status.CONNECTED) return@launch
+            if(realtimeChannel.status.value == RealtimeChannel.Status.JOINED) return@launch
             supabaseClient.realtime.connect()
             productChangeFlowJob.value = realtimeChannel.postgresChangeFlow<PostgresAction>("public") {
                 table = "products"
@@ -131,6 +138,36 @@ class EinkaufszettelViewModel(
         }
     }
 
+    fun sendPasswordRecovery(email: String) {
+        scope.launch {
+            kotlin.runCatching {
+                supabaseClient.gotrue.sendRecoveryEmail(email)
+            }.onSuccess {
+                events.add(UIEvent.Alert("Eine E-Mail mit weiteren Anweisungen wurde an $email gesendet"))
+            }.onFailure {
+                when(it) {
+                    is RestException -> events.add(UIEvent.Alert("E-Mail konnte nicht gesendet werden. Bitte überprüfe deine E-Mail-Adresse."))
+                    else -> events.add(UIEvent.Alert("E-Mail konnte nicht gesendet werden. Bitte überprüfe deine Internetverbindung"))
+                }
+            }
+        }
+    }
+
+    fun changePasswordTo(password: String) {
+        scope.launch {
+            kotlin.runCatching {
+                supabaseClient.gotrue.modifyUser(Email) {
+                    this.password = password
+                }
+            }.onSuccess {
+                events.add(UIEvent.Alert("Passwort erfolgreich geändert."))
+            }.onFailure {
+                it.printStackTrace()
+                events.add(UIEvent.Alert("Konnte Passwort nicht ändern. Bitte überprüfe deine Internetverbindung."))
+            }
+        }
+    }
+
     fun retrieveProfile(load: Boolean = true) {
         scope.launch {
             if(load) _profileStatus.value = ProfileStatus.Loading
@@ -169,7 +206,7 @@ class EinkaufszettelViewModel(
                 Napier.e(it) { "Failed to update username" }
                 events.add(UIEvent.Alert("Fehler beim Aktualisieren des Benutzernamens"))
             }.onSuccess {
-                settings.setProfile(UserProfile(id!!, username))
+                settings.setProfile(RemoteUser(id!!, username))
                 events.add(UIEvent.Alert("Benutzername erfolgreich aktualisiert"))
             }
         }
@@ -211,6 +248,29 @@ class EinkaufszettelViewModel(
                 profileApi.retrieveProfilesFromIds(ids)
             }.onSuccess {
                 localUserDataSource.insertAll(it)
+            }
+        }
+    }
+
+    fun retrieveSingleProfile(id: String) {
+        scope.launch {
+            runCatching {
+                profileApi.retrieveProfile(id)
+            }.onSuccess {
+                localUserDataSource.insertUser(it)
+            }.onFailure {
+                when(it) {
+                    is RestException -> events.add(UIEvent.Alert("Fehler beim Laden des Benutzers. Bitte überprüfe die Id"))
+                    else -> events.add(UIEvent.Alert("Fehler beim Laden des Benutzers. Bitte überprüfe deine Internetverbindung"))
+                }
+            }
+        }
+    }
+
+    fun removeProfile(id: String) {
+        scope.launch {
+            kotlin.runCatching {
+                localUserDataSource.deleteUserById(id)
             }
         }
     }
@@ -258,9 +318,9 @@ class EinkaufszettelViewModel(
     }
 
     //actual shopping list
-    fun markProductAsDone(id: Long, callback: () -> Unit) {
+    fun markEntryAsDone(id: Long, callback: () -> Unit) {
         val ownUserId = supabaseClient.gotrue.currentSessionOrNull()?.user?.id ?: throw IllegalStateException("Session shouldn't be null here")
-        scope.launch {
+        scope.launch(Dispatchers.IO) {
             kotlin.runCatching {
                 productsApi.markAsDone(id.toInt(), ownUserId)
             }.onSuccess {
@@ -272,8 +332,8 @@ class EinkaufszettelViewModel(
         }
     }
 
-    fun markProductAsNotDone(id: Long, callback: () -> Unit) {
-        scope.launch {
+    fun markEntryAsNotDone(id: Long, callback: () -> Unit) {
+        scope.launch(Dispatchers.IO) {
             kotlin.runCatching {
                 productsApi.markAsUndone(id.toInt())
             }.onSuccess {
@@ -285,8 +345,8 @@ class EinkaufszettelViewModel(
         }
     }
 
-    fun deleteProduct(id: Long) {
-        scope.launch {
+    fun deleteEntry(id: Long) {
+        scope.launch(Dispatchers.IO) {
             kotlin.runCatching {
                 productsApi.deleteProduct(id.toInt())
             }.onSuccess {
@@ -297,14 +357,68 @@ class EinkaufszettelViewModel(
         }
     }
 
-    fun createProduct(shopId: Long, content: String) {
-        scope.launch {
+    fun createEntry(shopId: Long, content: String) {
+        scope.launch(Dispatchers.IO) {
             kotlin.runCatching {
                 productsApi.createProduct(shopId.toInt(), content, supabaseClient.gotrue.currentSessionOrNull()?.user?.id ?: throw IllegalStateException("Session shouldn't be null here"))
             }.onSuccess {
                 productEntryDataSource.insertEntry(it)
             }.onFailure {
                 events.add(UIEvent.Alert("Fehler beim Erstellen des Produkts. Bitte überprüfe deine Internetverbindung"))
+            }
+        }
+    }
+
+    fun editEntry(id: Long, content: String) {
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                productsApi.editContent(id.toInt(), content)
+            }.onSuccess {
+                productEntryDataSource.editEntryContent(id, content)
+            }.onFailure {
+                Napier.e(it) { "Error while editing entry" }
+                events.add(UIEvent.Alert("Fehler beim Bearbeiten des Produkts. Bitte überprüfe deine Internetverbindung"))
+            }
+        }
+    }
+
+    //shop creation & modification
+    fun createShop(name: String, fileInfo: FileInfo, authorizedUsers: List<String>) {
+        val ownId = supabaseClient.gotrue.currentSessionOrNull()?.user?.id ?: throw IllegalStateException("Session shouldn't be null here")
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                shopApi.createShop(name, fileInfo, ownId, authorizedUsers)
+            }.onSuccess {
+                shopDataSource.insertShop(it)
+            }.onFailure {
+                Napier.e(it) { "Error while creating shop" }
+                events.add(UIEvent.Alert("Fehler beim Erstellen des Shops. Bitte überprüfe deine Internetverbindung"))
+            }
+        }
+    }
+
+    fun editShop(id: Long, name: String, authorizedUsers: List<String>) {
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                shopApi.editShop(id.toInt(), name, authorizedUsers)
+            }.onSuccess {
+                shopDataSource.insertShop(it)
+            }.onFailure {
+                Napier.e(it) { "Error while editing shop" }
+                events.add(UIEvent.Alert("Fehler beim Bearbeiten des Shops. Bitte überprüfe deine Internetverbindung"))
+            }
+        }
+    }
+
+    fun deleteShop(id: Long, iconUrl: String) {
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                shopApi.deleteShop(id.toInt(), iconUrl)
+            }.onSuccess {
+                shopDataSource.deleteById(id)
+            }.onFailure {
+                Napier.e(it) { "Error while deleting shop" }
+                events.add(UIEvent.Alert("Fehler beim Löschen des Shops. Bitte überprüfe deine Internetverbindung"))
             }
         }
     }

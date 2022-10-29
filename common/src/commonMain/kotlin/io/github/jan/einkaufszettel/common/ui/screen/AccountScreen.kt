@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
 import io.github.jan.einkaufszettel.common.ProfileStatus
+import io.github.jan.einkaufszettel.common.ui.dialog.ChangePasswordDialog
 import io.github.jan.einkaufszettel.common.ui.dialog.ShareIdDialog
 import io.github.jan.einkaufszettel.common.ui.icons.LocalIcon
 import io.github.jan.einkaufszettel.common.ui.icons.Person
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.map
 @Composable
 fun AccountScreen(viewModel: EinkaufszettelViewModel) {
     var shareId by remember { mutableStateOf(false) }
+    var showPasswordChangeDialog by remember { mutableStateOf(false) }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
@@ -58,17 +60,32 @@ fun AccountScreen(viewModel: EinkaufszettelViewModel) {
         contentAlignment = Alignment.BottomCenter,
         modifier = Modifier.fillMaxSize()
     ) {
-        Button(
-            onClick = {
-                viewModel.logout()
-            },
-            modifier = Modifier.padding(10.dp),
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Ausloggen")
+            Button(
+                onClick = {
+                    showPasswordChangeDialog = true
+                },
+            ) {
+                Text("Password ändern")
+            }
+            Button(
+                onClick = {
+                    viewModel.logout()
+                },
+                modifier = Modifier.padding(10.dp),
+            ) {
+                Text("Ausloggen")
+            }
         }
     }
 
     if(shareId) {
         ShareIdDialog(close = { shareId = false }, id = viewModel.supabaseClient.gotrue.currentSessionOrNull()!!.user!!.id, viewModel)
+    }
+
+    if(showPasswordChangeDialog) {
+        ChangePasswordDialog(viewModel, close = { showPasswordChangeDialog = false })
     }
 }

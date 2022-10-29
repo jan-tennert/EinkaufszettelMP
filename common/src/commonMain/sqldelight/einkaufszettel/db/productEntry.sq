@@ -42,3 +42,8 @@ markEntryUndone:
 UPDATE productEntryDto
 SET doneById = NULL
 WHERE id = :id;
+
+editEntryContent:
+UPDATE productEntryDto
+SET content = :content
+WHERE id = :id;

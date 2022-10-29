@@ -115,8 +115,8 @@ internal class ShopDataSourceImpl(
 
     override suspend fun insertAll(shops: List<Shop>) {
         withContext(Dispatchers.IO) {
+            val oldData = queries.getAllShops().executeAsList()
             queries.transaction {
-                val oldData = queries.getAllShops().executeAsList()
                 val toDelete = oldData.filter { shops.none { newShop -> newShop.id.toLong() == it.id } }
                 shops.forEach {
                     queries.insertShop(

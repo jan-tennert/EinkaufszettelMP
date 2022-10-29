@@ -1,5 +1,7 @@
 package io.github.jan.einkaufszettel.common.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -13,9 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import einkaufszettel.db.ShopDto
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ShopCard(shop: ShopDto, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    ElevatedCard(modifier = modifier, onClick = onClick) {
+fun ShopCard(shop: ShopDto, modifier: Modifier = Modifier, onLongClick: () -> Unit, onClick: () -> Unit) {
+    ElevatedCard(modifier = modifier.combinedClickable(onLongClick = onLongClick) { onClick() }) {
         Box(modifier = Modifier.padding(8.dp)) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,

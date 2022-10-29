@@ -40,12 +40,17 @@ interface ShopApi {
         icon: FileInfo,
         ownerId: String,
         authorizedUsers: List<String>
-    )
+    ): Shop
 
     suspend fun editShop(
         id: Int,
         newName: String,
         authorizedUsers: List<String>
+    ): Shop
+
+    suspend fun deleteShop(
+        id: Int,
+        iconUrl: String
     )
 
 }
@@ -55,6 +60,7 @@ internal class ShopApiImpl(
 ) : ShopApi {
 
     private val table = supabaseClient.postgrest["shops"]
+    private val products = supabaseClient.postgrest["products"]
     private val bucket = supabaseClient.storage["icons"]
 
     override suspend fun retrieveShops(): List<Shop> {
@@ -66,23 +72,33 @@ internal class ShopApiImpl(
         icon: FileInfo,
         ownerId: String,
         authorizedUsers: List<String>
-    ) {
-        val iconUrl = bucket.upload(Clock.System.now().toEpochMilliseconds().toString() + "." + icon.extension, icon.bytes)
-        table.insert(buildJsonObject {
+    ): Shop {
+        val iconUrl = bucket.publicUrl(bucket.upload(Clock.System.now().toEpochMilliseconds().toString() + "." + icon.extension, icon.bytes).substringAfterLast("/"))
+        return table.insert(buildJsonObject {
             put("name", name)
             put("icon_url", iconUrl)
             put("owner_id", ownerId)
             put("authorized_users", JsonArray(authorizedUsers.map { JsonPrimitive(it) }))
-        })
+        }).decodeSingle()
     }
 
-    override suspend fun editShop(id: Int, newName: String, authorizedUsers: List<String>) {
-        table.update({
+    override suspend fun editShop(id: Int, newName: String, authorizedUsers: List<String>): Shop {
+        return table.update({
             Shop::name setTo newName
             set("authorized_users", JsonArray(authorizedUsers.map { JsonPrimitive(it)}))
         }) {
             Shop::id eq id
+        }.decodeSingle()
+    }
+
+    override suspend fun deleteShop(id: Int, iconUrl: String) {
+        products.delete {
+            ProductEntry::shopId eq id
         }
+        table.delete {
+            Shop::id eq id
+        }
+        bucket.delete(iconUrl.substringAfterLast("/"))
     }
 
 }

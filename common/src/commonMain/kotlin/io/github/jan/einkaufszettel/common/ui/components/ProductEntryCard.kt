@@ -1,10 +1,9 @@
 package io.github.jan.einkaufszettel.common.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,7 +32,8 @@ private val FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
 fun LazyItemScope.ProductEntryCard(product: GetAllEntries, viewModel: EinkaufszettelViewModel) {
     var loading by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(8.dp).animateItemPlacement()) {
+    var showEditDialog by remember { mutableStateOf(false) }
+    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(8.dp).combinedClickable(onLongClick = { showEditDialog = true }) {  }.animateItemPlacement()) {
         Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
             val formattedDate = remember(product) { FORMATTER.format(LocalDateTime.ofInstant(product.createdAt.toJavaInstant(), ZoneOffset.systemDefault())) }
             if(loading) {
@@ -46,11 +46,11 @@ fun LazyItemScope.ProductEntryCard(product: GetAllEntries, viewModel: Einkaufsze
                     onCheckedChange = {
                         loading = true
                         if(it) {
-                            viewModel.markProductAsDone(product.id) {
+                            viewModel.markEntryAsDone(product.id) {
                                 loading = false
                             }
                         } else {
-                            viewModel.markProductAsNotDone(product.id) {
+                            viewModel.markEntryAsNotDone(product.id) {
                                 loading = false
                             }
                         }
@@ -58,7 +58,7 @@ fun LazyItemScope.ProductEntryCard(product: GetAllEntries, viewModel: Einkaufsze
                 )
             }
             Column {
-                Text(text = product.content, textDecoration = if(product.doneBy != null) TextDecoration.LineThrough else null)
+                Text(text = product.content, textDecoration = if(product.doneBy != null) TextDecoration.LineThrough else null, modifier = Modifier.fillMaxWidth(0.9f))
                 Text(buildAnnotatedString {
                     append(formattedDate)
                     withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
@@ -83,7 +83,7 @@ fun LazyItemScope.ProductEntryCard(product: GetAllEntries, viewModel: Einkaufsze
             confirmButton = {
                 Button(onClick = {
                     showDeleteDialog = false
-                    viewModel.deleteProduct(product.id)
+                    viewModel.deleteEntry(product.id)
                 }) {
                     Text("Löschen")
                 }
@@ -100,5 +100,11 @@ fun LazyItemScope.ProductEntryCard(product: GetAllEntries, viewModel: Einkaufsze
                 showDeleteDialog = false
             }
         )
+    }
+
+    if(showEditDialog) {
+        EditEntryDialog(product.content, product.id, viewModel) {
+            showEditDialog = false
+        }
     }
 }

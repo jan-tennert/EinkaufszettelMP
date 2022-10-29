@@ -3,7 +3,6 @@ package io.github.jan.einkaufszettel.common.data.local
 import com.squareup.sqldelight.runtime.coroutines.asFlow
 import com.squareup.sqldelight.runtime.coroutines.mapToList
 import einkaufszettel.db.LocalUserDto
-import io.github.jan.einkaufszettel.common.data.remote.UserProfile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -14,9 +13,11 @@ interface LocalUserDataSource {
 
     fun retrieveAllUsers(): List<LocalUserDto>
 
-    suspend fun insertUser(user: UserProfile)
+    suspend fun insertUser(user: io.github.jan.einkaufszettel.common.data.remote.RemoteUser)
 
-    suspend fun insertAll(users: List<UserProfile>)
+    suspend fun insertAll(users: List<io.github.jan.einkaufszettel.common.data.remote.RemoteUser>)
+
+    suspend fun deleteUserById(id: String)
 
 }
 
@@ -30,7 +31,7 @@ internal class LocalUserDataSourceImpl(
         return queries.getUsers().asFlow().mapToList()
     }
 
-    override suspend fun insertAll(users: List<UserProfile>) {
+    override suspend fun insertAll(users: List<io.github.jan.einkaufszettel.common.data.remote.RemoteUser>) {
         withContext(Dispatchers.IO) {
             queries.transaction {
                 users.forEach { user ->
@@ -43,7 +44,7 @@ internal class LocalUserDataSourceImpl(
         }
     }
 
-    override suspend fun insertUser(user: UserProfile) {
+    override suspend fun insertUser(user: io.github.jan.einkaufszettel.common.data.remote.RemoteUser) {
         withContext(Dispatchers.IO) {
             queries.insertUser(
                 id = user.id,
@@ -54,6 +55,12 @@ internal class LocalUserDataSourceImpl(
 
     override fun retrieveAllUsers(): List<LocalUserDto> {
         return queries.getUsers().executeAsList()
+    }
+
+    override suspend fun deleteUserById(id: String) {
+        withContext(Dispatchers.IO) {
+            queries.deleteUserById(id)
+        }
     }
 
 }

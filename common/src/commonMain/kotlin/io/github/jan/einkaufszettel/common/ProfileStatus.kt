@@ -1,6 +1,6 @@
 package io.github.jan.einkaufszettel.common
 
-import io.github.jan.einkaufszettel.common.data.remote.UserProfile
+import io.github.jan.einkaufszettel.common.data.remote.RemoteUser
 
 sealed interface ProfileStatus {
 
@@ -8,6 +8,6 @@ sealed interface ProfileStatus {
     object NotTried: ProfileStatus
     object Loading: ProfileStatus
     @JvmInline
-    value class Available(val profile: UserProfile): ProfileStatus
+    value class Available(val profile: RemoteUser): ProfileStatus
 
 }
