@@ -1,0 +1,12 @@
+CREATE TABLE localUserDto (
+    id TEXT NOT NULL PRIMARY KEY,
+    username TEXT NOT NULL
+);
+
+insertUser:
+INSERT OR REPLACE
+INTO localUserDto
+VALUES (?, ?);
+
+getUsers:
+SELECT * FROM localUserDto;

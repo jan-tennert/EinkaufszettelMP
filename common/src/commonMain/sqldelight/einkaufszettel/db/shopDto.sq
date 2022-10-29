@@ -1,0 +1,29 @@
+import kotlin.collections.List;
+import kotlinx.datetime.Instant;
+
+CREATE TABLE shopDto (
+    id INTEGER NOT NULL PRIMARY KEY,
+    createdAt INTEGER AS Instant NOT NULL,
+    name TEXT NOT NULL,
+    iconUrl TEXT NOT NULL,
+    ownerId TEXT NOT NULL,
+    authorizedUsers TEXT AS List<String> NOT NULL,
+    FOREIGN KEY (ownerId) REFERENCES localUserDto(id)
+);
+
+getAllShops:
+SELECT * FROM shopDto;
+
+insertShop:
+INSERT OR REPLACE
+INTO shopDto
+VALUES(?, ?, ?, ?, ?, ?);
+
+deleteShopById:
+DELETE
+FROM shopDto
+WHERE id = :id;
+
+clearShops:
+DELETE
+FROM shopDto;

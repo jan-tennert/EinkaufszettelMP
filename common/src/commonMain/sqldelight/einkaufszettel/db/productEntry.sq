@@ -1,0 +1,44 @@
+import kotlinx.datetime.Instant;
+
+CREATE TABLE productEntryDto (
+    id INTEGER NOT NULL PRIMARY KEY,
+    content TEXT NOT NULL,
+    createdAt INTEGER AS Instant NOT NULL,
+    shopId INTEGER NOT NULL,
+    doneById TEXT,
+    creatorId TEXT NOT NULL,
+    FOREIGN KEY (creatorId) REFERENCES localUserDto(id),
+    FOREIGN KEY(doneById) REFERENCES localUserDto(id)
+);
+
+getAllEntries:
+SELECT productEntry.id, content, createdAt, shopId, doneBy.username AS doneBy, creator.username AS creator
+FROM productEntryDto AS productEntry
+LEFT JOIN localUserDto doneBy
+ON productEntry.doneById = doneBy.id
+LEFT JOIN localUserDto creator
+ON productEntry.creatorId = creator.id
+ORDER BY doneBy IS NULL DESC;
+
+insertEntry:
+INSERT OR REPLACE
+INTO productEntryDto
+VALUES(?, ?, ?, ?, ?, ?);
+
+deleteEntryById:
+DELETE
+FROM productEntryDto
+WHERE id = :id;
+
+clearEntries:
+DELETE FROM productEntryDto;
+
+markEntryAsDone:
+UPDATE productEntryDto
+SET doneById = :doneById
+WHERE id = :id;
+
+markEntryUndone:
+UPDATE productEntryDto
+SET doneById = NULL
+WHERE id = :id;
