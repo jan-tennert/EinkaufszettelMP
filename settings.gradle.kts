@@ -7,6 +7,7 @@ pluginManagement {
         maven {
             url = uri("https://jitpack.io/")
         }
+        maven("https://maven.hq.hydraulic.software")
     }
 
     plugins {

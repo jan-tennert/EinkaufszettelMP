@@ -15,9 +15,12 @@ import io.github.jan.supabase.gotrue.SessionStatus
 
 @Composable
 fun RootScreen(viewModel: EinkaufszettelViewModel) {
+    val os = remember {
+        if(CurrentPlatformTarget == PlatformTarget.DESKTOP) System.getProperty("os.name") else ""
+    }
     val version by viewModel.latestVersion.collectAsState()
     var ignoreVersion by remember { mutableStateOf(false) }
-    if(version != 0 && version > Einkaufszettel.VERSION && !ignoreVersion) {
+    if(version != 0 && version > Einkaufszettel.VERSION && !ignoreVersion && os.lowercase().contains("windows")) {
         UpdateScreen(viewModel) {
             ignoreVersion = true
         }

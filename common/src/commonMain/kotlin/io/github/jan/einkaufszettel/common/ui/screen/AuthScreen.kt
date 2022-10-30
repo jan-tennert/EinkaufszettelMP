@@ -3,8 +3,6 @@ package io.github.jan.einkaufszettel.common.ui.screen
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +17,8 @@ import io.github.jan.einkaufszettel.common.handleEnter
 import io.github.jan.einkaufszettel.common.ui.components.GoogleButton
 import io.github.jan.einkaufszettel.common.ui.components.PasswordField
 import io.github.jan.einkaufszettel.common.ui.dialog.PasswordRecoveryDialog
+import io.github.jan.einkaufszettel.common.ui.icons.LocalIcon
+import io.github.jan.einkaufszettel.common.ui.icons.Mail
 import io.github.jan.einkaufszettel.common.ui.theme.topPadding
 import io.github.jan.supabase.gotrue.providers.builtin.Email.Config
 
@@ -45,7 +45,7 @@ fun AuthScreen(viewModel: EinkaufszettelViewModel) {
                 imeAction = ImeAction.Next
             ),
             keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
-            leadingIcon = { Icon(Icons.Filled.Mail, "Mail") },
+            leadingIcon = { Icon(LocalIcon.Mail, "Mail") },
         )
         PasswordField(
             password = password,

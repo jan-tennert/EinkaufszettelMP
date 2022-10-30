@@ -28,7 +28,7 @@ kotlin {
                 api(compose.runtime)
                 api(compose.foundation)
                 api(compose.material3)
-                api(compose.materialIconsExtended)
+              //  api(compose.materialIconsExtended)
                 api("io.github.jan-tennert.supabase:gotrue-kt:${Versions.SUPABASE}")
                 api("io.github.jan-tennert.supabase:storage-kt:${Versions.SUPABASE}")
                 api("io.github.jan-tennert.supabase:realtime-kt:${Versions.SUPABASE}")

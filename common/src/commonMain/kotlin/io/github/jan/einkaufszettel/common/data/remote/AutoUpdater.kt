@@ -27,7 +27,7 @@ internal class AutoUpdaterImpl(
 
     override suspend fun retrieveNewestVersion(): Int {
         return httpClient.get("https://api.github.com/repos/$repo/releases/latest") {
-            header("Authorization", "Bearer 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")
+            header("Authorization", "")
         }.body<JsonObject>()["tag_name"]?.jsonPrimitive?.content?.substring(1)?.toInt() ?: 0
     }
 

@@ -76,7 +76,7 @@ class EinkaufszettelViewModel(
             }
         }
         scope.launch {
-            githubReleaseApi.retrieveNewestVersion().also(::println)
+            githubReleaseApi.retrieveNewestVersion()
         }
     }
 
@@ -127,14 +127,12 @@ class EinkaufszettelViewModel(
         scope.launch(Dispatchers.IO) {
             kotlin.runCatching {
                 supabaseClient.gotrue.loginWith(Email, config = config)
-                println("??????")
             }.onFailure {
                 when(it) {
                     is RestException -> events.add(UIEvent.Alert("Login fehlgeschlagen. Bitte überprüfe deine Anmeldedaten."))
                     else -> events.add(UIEvent.Alert("Login fehlgeschlagen. Bitte überprüfe deine Internetverbindung"))
                 }
             }.onSuccess {
-                println("retrieving profile")
                 retrieveProfile()
             }
         }
@@ -246,7 +244,6 @@ class EinkaufszettelViewModel(
                 val cards = cardApi.retrieveCards()
                 val requiredUsers = (shops.map { it.authorizedUsers.filter { id -> id !in currentUserCache } } + cards.map { it.authorizedUsers?.filter { id -> id !in currentUserCache } ?: emptyList() }).flatten()
                 val users = profileApi.retrieveProfilesFromIds(requiredUsers)
-                println(users)
                 rootDataSource.insertAll(
                     products = products,
                     shops = shops,
@@ -337,7 +334,6 @@ class EinkaufszettelViewModel(
 
     //realtime
     private fun handleProductChange(action: PostgresAction) {
-        println(action)
         scope.launch {
             when(action) {
                 is PostgresAction.Delete -> productEntryDataSource.deleteEntryById(action.oldRecord["id"]?.jsonPrimitive?.longOrNull ?: throw IllegalStateException("Realtime delete without id (products)"))

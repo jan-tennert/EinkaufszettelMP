@@ -17,7 +17,6 @@ expect fun BackHandle(action: () -> Unit)
 fun MainScreen(viewModel: EinkaufszettelViewModel) {
     val navController by rememberNavController(NavigationTarget.Bottom.Home)
     val currentTarget by navController.currentScreen
-    println(currentTarget)
     val bottomItems = remember { NavigationTarget.Bottom.ALL }
     Scaffold(
         topBar = { TopBar(currentTarget.topTitle) },
