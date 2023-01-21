@@ -42,3 +42,7 @@ android {
         abortOnError = false
     }
 }
+
+compose {
+   // kotlinCompilerPlugin.set("org.jetbrains.compose.compiler:compiler:${Versions.COMPOSE_COMPILER}") // see versions here https://mvnrepository.com/artifact/org.jetbrains.compose.compiler/compiler
+}

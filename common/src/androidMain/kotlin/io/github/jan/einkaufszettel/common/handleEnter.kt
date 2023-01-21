@@ -6,7 +6,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.key.KeyEvent
 
-actual fun KeyEvent.handleEnter(onEnter: () -> Unit) {
+actual inline fun KeyEvent.handleEnter(onEnter: () -> Unit): Boolean {
+    return false
 }
 
 actual fun ByteArray.toComposeImage(): ImageBitmap {

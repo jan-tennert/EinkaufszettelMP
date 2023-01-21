@@ -17,6 +17,10 @@ kotlin {
     jvm("desktop") {
         compilations.all {
             kotlinOptions.jvmTarget = "11"
+            kotlinOptions.freeCompilerArgs += listOf(
+                "-P",
+                "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
+            )
         }
     }
     sourceSets {
@@ -29,10 +33,11 @@ kotlin {
                 api(compose.foundation)
                 api(compose.material3)
               //  api(compose.materialIconsExtended)
-                api("io.github.jan-tennert.supabase:gotrue-kt:${Versions.SUPABASE}")
-                api("io.github.jan-tennert.supabase:storage-kt:${Versions.SUPABASE}")
-                api("io.github.jan-tennert.supabase:realtime-kt:${Versions.SUPABASE}")
-                api("io.github.jan-tennert.supabase:postgrest-kt:${Versions.SUPABASE}")
+                api(project.dependencies.platform("io.github.jan-tennert.supabase:bom:${Versions.SUPABASE}"))
+                api("io.github.jan-tennert.supabase:gotrue-kt")
+                api("io.github.jan-tennert.supabase:storage-kt")
+                api("io.github.jan-tennert.supabase:realtime-kt")
+                api("io.github.jan-tennert.supabase:postgrest-kt")
                 api("com.squareup.sqldelight:coroutines-extensions:${Versions.SQLDELIGHT}")
                 api("io.insert-koin:koin-core:${Versions.KOIN}")
                 api("com.russhwolf:multiplatform-settings-no-arg:${Versions.SETTINGS}")
@@ -95,4 +100,8 @@ sqldelight {
     database("EinkaufszettelDatabase") {
         packageName = "io.github.jan.einkaufszettel.common.data.local"
     }
+}
+
+compose {
+   // kotlinCompilerPlugin.set("org.jetbrains.compose.compiler:compiler:${Versions.COMPOSE_COMPILER}") // see versions here https://mvnrepository.com/artifact/org.jetbrains.compose.compiler/compiler
 }

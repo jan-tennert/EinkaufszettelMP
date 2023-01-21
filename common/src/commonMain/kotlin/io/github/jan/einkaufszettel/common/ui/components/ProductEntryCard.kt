@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,13 +59,20 @@ fun LazyItemScope.ProductEntryCard(product: GetAllEntries, viewModel: Einkaufsze
                 )
             }
             Column {
-                Text(text = product.content, modifier = Modifier.fillMaxWidth(0.9f))
+                Text(text = product.content, modifier = Modifier.fillMaxWidth(0.9f), textDecoration = if(product.doneBy != null) TextDecoration.LineThrough else TextDecoration.None)
                 Text(buildAnnotatedString {
                     append(formattedDate)
-                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append(" von ")
+                    if(product.doneBy == null) {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(" von ")
+                        }
+                        append(product.creator ?: "Unbekannt")
+                    } else {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(" durchgestrichen von ")
+                        }
+                        append(product.doneBy ?: "Unbekannt")
                     }
-                    append(product.creator ?: "Unbekannt")
                 }, fontSize = 10.sp)
             }
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {

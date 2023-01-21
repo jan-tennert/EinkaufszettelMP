@@ -8,6 +8,9 @@ pluginManagement {
             url = uri("https://jitpack.io/")
         }
         maven("https://maven.hq.hydraulic.software")
+        maven {
+            url = uri("https://androidx.dev/storage/compose-compiler/repository/")
+        }
     }
 
     plugins {
@@ -19,6 +22,16 @@ pluginManagement {
         id("com.google.devtools.ksp").version(extra["ksp.version"] as String)
         id("com.squareup.sqldelight").version(extra["sqlDelight.version"] as String)
         id("org.jetbrains.kotlin.plugin.serialization").version(extra["kotlin.version"] as String)
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url = uri("https://androidx.dev/storage/compose-compiler/repository/")
+        }
     }
 }
 

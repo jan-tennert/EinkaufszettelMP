@@ -9,6 +9,10 @@ allprojects {
         maven {
             url = uri("https://jitpack.io/")
         }
+        mavenLocal()
+        maven {
+            url = uri("https://androidx.dev/storage/compose-compiler/repository/")
+        }
     }
 }
 

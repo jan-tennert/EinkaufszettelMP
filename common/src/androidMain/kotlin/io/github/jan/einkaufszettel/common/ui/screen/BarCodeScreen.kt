@@ -19,6 +19,7 @@ import java.util.*
 actual fun BarCodeScreen(viewModel: EinkaufszettelViewModel) {
     val nutritionData by viewModel.nutritionData.collectAsState()
     val cameraPermissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
+    println(cameraPermissionState.status)
     when(cameraPermissionState.status) {
         is PermissionStatus.Denied -> {
             SideEffect {

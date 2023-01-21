@@ -13,6 +13,10 @@ kotlin {
     jvm {
         compilations.all {
             kotlinOptions.jvmTarget = "11"
+            kotlinOptions.freeCompilerArgs += listOf(
+                "-P",
+                "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
+            )
         }
         withJava()
     }
@@ -33,7 +37,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Rpm, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "Einkaufszettel"
-            packageVersion = "1.0.4"
+            packageVersion = "1.0.6"
             modules("java.sql")
 
             val iconsRoot = project.file("src/jvmMain/resources")
@@ -48,4 +52,8 @@ compose.desktop {
             }
         }
     }
+}
+
+compose {
+   // kotlinCompilerPlugin.set("org.jetbrains.compose.compiler:compiler:${Versions.COMPOSE_COMPILER}") // see versions here https://mvnrepository.com/artifact/org.jetbrains.compose.compiler/compiler
 }

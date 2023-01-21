@@ -11,6 +11,7 @@ import io.github.jan.supabase.realtime.createChannel
 import io.github.jan.supabase.realtime.realtime
 import io.github.jan.supabase.storage.Storage
 import org.koin.dsl.module
+import kotlin.time.Duration.Companion.seconds
 
 val supabaseModule = module {
     single {
@@ -24,7 +25,9 @@ val supabaseModule = module {
             }
             install(Storage)
             install(Postgrest)
-            install(Realtime)
+            install(Realtime) {
+                heartbeatInterval = 30.seconds
+            }
         }
     }
     single {

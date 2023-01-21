@@ -34,7 +34,7 @@ fun SettingsScreen(viewModel: EinkaufszettelViewModel) {
     }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
         Button({
-            urlService.openURL("https://github.com/jan-tennert/EinkaufszettelMP/releases/tag/$VERSION")
+            urlService.openURL("https://github.com/jan-tennert/EinkaufszettelMP/releases/tag/v$VERSION")
         }) {
             Text("Neu in der Version $VERSION")
         }

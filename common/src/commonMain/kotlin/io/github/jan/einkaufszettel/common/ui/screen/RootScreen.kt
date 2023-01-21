@@ -20,7 +20,8 @@ fun RootScreen(viewModel: EinkaufszettelViewModel) {
     }
     val version by viewModel.latestVersion.collectAsState()
     var ignoreVersion by remember { mutableStateOf(false) }
-    if(version != 0 && version > Einkaufszettel.VERSION && !ignoreVersion && os.lowercase().contains("windows")) {
+    println("Version: $version")
+    if(version != 0 && version > Einkaufszettel.VERSION && !ignoreVersion && (os.lowercase().contains("windows") || CurrentPlatformTarget == PlatformTarget.ANDROID)) {
         UpdateScreen(viewModel) {
             ignoreVersion = true
         }

@@ -13,7 +13,7 @@ fun main() {
 
         RootLifecycle(rootComponent)
 
-        Window(onCloseRequest = ::exitApplication) {
+        Window(onCloseRequest = ::exitApplication, title = "Einkaufszettel") {
             App(rootComponent.viewModel)
         }
     }

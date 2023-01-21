@@ -76,7 +76,9 @@ class EinkaufszettelViewModel(
             }
         }
         scope.launch {
-            githubReleaseApi.retrieveNewestVersion()
+            kotlin.runCatching {
+                githubReleaseApi.retrieveNewestVersion()
+            }
         }
     }
 
@@ -271,7 +273,7 @@ class EinkaufszettelViewModel(
             kotlin.runCatching {
                 shopApi.retrieveShops()
             }.onSuccess {
-                it.forEach { shop -> checkForNewUsers(shop.authorizedUsers) }
+                it.forEach { shop -> checkForNewUsers(shop.authorizedUsers, shop.ownerId) }
                 shopDataSource.insertAll(it)
             }
         }
@@ -282,7 +284,7 @@ class EinkaufszettelViewModel(
             kotlin.runCatching {
                 cardApi.retrieveCards()
             }.onSuccess {
-                it.forEach { card -> checkForNewUsers(card.authorizedUsers ?: emptyList()) }
+                it.forEach { card -> checkForNewUsers(card.authorizedUsers ?: emptyList(), card.ownerId) }
                 cardDataSource.insertAll(it)
             }
         }
@@ -322,10 +324,10 @@ class EinkaufszettelViewModel(
         }
     }
 
-    private fun checkForNewUsers(authorizedUsers: List<String>) {
+    private fun checkForNewUsers(authorizedUsers: List<String>, owner: String) {
         scope.launch(Dispatchers.IO) {
             val currentCache = localUserDataSource.retrieveAllUsers().map { it.id }
-            val newUsers = authorizedUsers.filter { it !in currentCache  }
+            val newUsers = authorizedUsers.filter { it !in currentCache  } + owner
             if(newUsers.isNotEmpty()) {
                 retrieveProfiles(newUsers)
             }
@@ -350,12 +352,12 @@ class EinkaufszettelViewModel(
                 is PostgresAction.Delete -> shopDataSource.deleteById(action.oldRecord["id"]?.jsonPrimitive?.longOrNull ?: throw IllegalStateException("Realtime delete without id (shops)"))
                 is PostgresAction.Insert -> {
                     val shop = action.decodeRecordOrNull<Shop>() ?: throw IllegalStateException("Couldn't decode new shop record")
-                    checkForNewUsers(shop.authorizedUsers)
+                    checkForNewUsers(shop.authorizedUsers, shop.ownerId)
                     shopDataSource.insertShop(shop)
                 }
                 is PostgresAction.Update -> {
                     val shop = action.decodeRecordOrNull<Shop>() ?: throw IllegalStateException("Couldn't decode new shop record")
-                    checkForNewUsers(shop.authorizedUsers)
+                    checkForNewUsers(shop.authorizedUsers, shop.ownerId)
                     shopDataSource.insertShop(shop)
                 }
                 else -> {}
@@ -369,12 +371,12 @@ class EinkaufszettelViewModel(
                 is PostgresAction.Delete -> cardDataSource.deleteCardById(action.oldRecord["id"]?.jsonPrimitive?.longOrNull ?: throw IllegalStateException("Realtime delete without id (cards)"))
                 is PostgresAction.Insert -> {
                     val card = action.decodeRecordOrNull<Card>() ?: throw IllegalStateException("Couldn't decode new card record")
-                    checkForNewUsers(card.authorizedUsers ?: emptyList())
+                    checkForNewUsers(card.authorizedUsers ?: emptyList(), card.ownerId)
                     cardDataSource.insertCard(card)
                 }
                 is PostgresAction.Update -> {
                     val card = action.decodeRecordOrNull<Card>() ?: throw IllegalStateException("Couldn't decode new card record")
-                    checkForNewUsers(card.authorizedUsers ?: emptyList())
+                    checkForNewUsers(card.authorizedUsers ?: emptyList(), card.ownerId)
                     cardDataSource.insertCard(card)
                 }
                 else -> {}
@@ -392,6 +394,7 @@ class EinkaufszettelViewModel(
                 productEntryDataSource.markEntryAsDone(id, ownUserId)
                 callback()
             }.onFailure {
+                callback()
                 events.add(UIEvent.Alert("Fehler beim Markieren des Produkts als erledigt. Bitte überprüfe deine Internetverbindung"))
             }
         }
@@ -405,6 +408,7 @@ class EinkaufszettelViewModel(
                 productEntryDataSource.markEntryUndone(id)
                 callback()
             }.onFailure {
+                callback()
                 events.add(UIEvent.Alert("Fehler beim Markieren des Produkts als nicht erledigt. Bitte überprüfe deine Internetverbindung"))
             }
         }
@@ -570,6 +574,7 @@ class EinkaufszettelViewModel(
                     downloadProgress.value = it
                 }
             }.onSuccess {
+                println("done???")
                 updateInstaller.install(it)
             }.onFailure {
                 Napier.e(it) { "Error while downloading latest version" }

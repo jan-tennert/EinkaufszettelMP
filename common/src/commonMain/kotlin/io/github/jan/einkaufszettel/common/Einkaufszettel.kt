@@ -2,6 +2,6 @@ package io.github.jan.einkaufszettel.common
 
 object Einkaufszettel {
 
-    const val VERSION = 1
+    const val VERSION = 4
 
 }

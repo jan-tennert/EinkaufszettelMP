@@ -9,8 +9,11 @@ import androidx.compose.ui.input.key.key
 import org.jetbrains.skia.Image
 
 @OptIn(ExperimentalComposeUiApi::class)
-actual fun KeyEvent.handleEnter(onEnter: () -> Unit) {
-    if(key == Key.Enter) onEnter()
+actual inline fun KeyEvent.handleEnter(onEnter: () -> Unit): Boolean {
+    return if(key == Key.Enter) {
+        onEnter()
+        true
+    } else false
 }
 
 actual fun ByteArray.toComposeImage(): ImageBitmap {

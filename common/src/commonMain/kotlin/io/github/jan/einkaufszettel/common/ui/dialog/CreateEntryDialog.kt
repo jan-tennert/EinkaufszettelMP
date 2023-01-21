@@ -37,8 +37,7 @@ fun CreateEntryDialog(shopId: Long, viewModel: EinkaufszettelViewModel, close: (
                 label = { Text("Eintrag") },
                 keyboardActions = KeyboardActions(onDone = { viewModel.createEntry(shopId, content); close() }),
                 modifier = Modifier.onPreviewKeyEvent {
-                    it.handleEnter { viewModel.createEntry(shopId, content); close() }
-                    false
+                    it.handleEnter { viewModel.createEntry(shopId, content); close(); }
                 }
             )
             Button(
