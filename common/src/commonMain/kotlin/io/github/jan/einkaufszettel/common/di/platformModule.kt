@@ -4,6 +4,7 @@ package io.github.jan.einkaufszettel.common.di
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
 import org.koin.core.module.Module
 import org.koin.core.scope.Scope
+import kotlin.jvm.JvmName
 
 expect val platformModule: Module
 

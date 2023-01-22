@@ -37,4 +37,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Einkaufszettel"
 
-include(":android", ":desktop", ":common")
+include(":android", ":desktop", ":common", ":web")

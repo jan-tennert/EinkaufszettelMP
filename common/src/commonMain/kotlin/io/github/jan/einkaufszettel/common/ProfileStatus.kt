@@ -1,6 +1,7 @@
 package io.github.jan.einkaufszettel.common
 
 import io.github.jan.einkaufszettel.common.data.remote.RemoteUser
+import kotlin.jvm.JvmInline
 
 sealed interface ProfileStatus {
 

@@ -22,6 +22,7 @@ import io.github.jan.einkaufszettel.common.ui.dialog.DeleteDialog
 import io.github.jan.einkaufszettel.common.ui.icons.Add
 import io.github.jan.einkaufszettel.common.ui.icons.Delete
 import io.github.jan.einkaufszettel.common.ui.icons.LocalIcon
+import kotlin.jvm.JvmInline
 
 sealed interface SelectedShop {
 

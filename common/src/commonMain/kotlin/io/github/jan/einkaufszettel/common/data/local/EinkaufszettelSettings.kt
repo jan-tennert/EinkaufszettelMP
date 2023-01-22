@@ -6,7 +6,7 @@ import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.coroutines.getStringFlow
 import com.russhwolf.settings.coroutines.toFlowSettings
 import io.github.jan.einkaufszettel.common.data.remote.RemoteUser
-import kotlinx.coroutines.Dispatchers
+import io.github.jan.einkaufszettel.common.ioDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.decodeFromString
@@ -40,7 +40,7 @@ internal class EinkaufszettelSettingsImpl(
 ): EinkaufszettelSettings {
 
 
-    private val settings = settings.toFlowSettings(Dispatchers.IO)
+    private val settings = settings.toFlowSettings(ioDispatcher)
 
     override val darkMode: Flow<EinkaufszettelSettings.DarkMode> = settings.getStringFlow(EinkaufszettelSettings.SETTINGS_DARK_MODE, EinkaufszettelSettings.DarkMode.NOT_SET.name)
         .map { EinkaufszettelSettings.DarkMode.valueOf(it) }

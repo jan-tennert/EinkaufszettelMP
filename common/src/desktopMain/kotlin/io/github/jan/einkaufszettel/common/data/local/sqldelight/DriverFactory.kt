@@ -5,9 +5,18 @@ import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import io.github.jan.einkaufszettel.common.data.local.EinkaufszettelDatabase
 
 actual class DriverFactory {
-    actual fun createDriver(): SqlDriver {
+
+    companion object {
+        private var driver: SqlDriver? = null
+    }
+
+    actual suspend fun initDriver() {
         val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
         EinkaufszettelDatabase.Schema.create(driver)
-        return driver
+        DriverFactory.driver = driver
+    }
+
+    actual fun driver(): SqlDriver {
+        return driver ?: throw IllegalStateException("Driver not initialized")
     }
 }

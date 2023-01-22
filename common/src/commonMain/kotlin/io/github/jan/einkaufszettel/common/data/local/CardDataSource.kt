@@ -4,7 +4,7 @@ import com.squareup.sqldelight.runtime.coroutines.asFlow
 import com.squareup.sqldelight.runtime.coroutines.mapToList
 import einkaufszettel.db.GetAllCards
 import io.github.jan.einkaufszettel.common.data.remote.Card
-import kotlinx.coroutines.Dispatchers
+import io.github.jan.einkaufszettel.common.ioDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
@@ -27,13 +27,13 @@ internal class CardDataSourceImpl(
     private val queries = db.cardDtoQueries
 
     override suspend fun deleteCardById(id: Long) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             queries.deleteCardById(id)
         }
     }
 
     override suspend fun insertCard(card: Card) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             queries.insertCard(
                 createdAt = card.createdAt,
                 ownerId = card.ownerId,
@@ -51,7 +51,7 @@ internal class CardDataSourceImpl(
 
 
     override suspend fun insertAll(cards: List<Card>) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val oldData = queries.getAllCards().executeAsList()
             queries.transaction {
                 val toDelete = oldData.filter { cards.none { newCard -> newCard.id.toLong() == it.id } }

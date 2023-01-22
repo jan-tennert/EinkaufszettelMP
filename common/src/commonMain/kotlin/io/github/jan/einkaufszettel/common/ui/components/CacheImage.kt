@@ -7,6 +7,7 @@ import io.github.jan.supabase.storage.BucketApi
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import kotlin.jvm.JvmName
 
 internal val HTTP_CLIENT = HttpClient()
 

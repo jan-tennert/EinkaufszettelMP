@@ -4,7 +4,7 @@ import com.squareup.sqldelight.runtime.coroutines.asFlow
 import com.squareup.sqldelight.runtime.coroutines.mapToList
 import einkaufszettel.db.GetAllEntries
 import io.github.jan.einkaufszettel.common.data.remote.ProductEntry
-import kotlinx.coroutines.Dispatchers
+import io.github.jan.einkaufszettel.common.ioDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
@@ -35,7 +35,7 @@ internal class ProductEntryDataSourceImpl(
     private val queries = db.productEntryQueries
 
     override suspend fun deleteEntryById(id: Long) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             queries.deleteEntryById(id)
         }
     }
@@ -45,7 +45,7 @@ internal class ProductEntryDataSourceImpl(
     }
 
     override suspend fun insertEntry(productEntry: ProductEntry) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             queries.insertEntry(
                 id = productEntry.id.toLong(),
                 content = productEntry.content,
@@ -58,13 +58,13 @@ internal class ProductEntryDataSourceImpl(
     }
 
     override suspend fun clearEntries() {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             queries.clearEntries()
         }
     }
 
     override suspend fun insertAll(entries: List<ProductEntry>) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val oldData = queries.getAllEntries().executeAsList()
             queries.transaction {
                 val toDelete = oldData.filter { entries.none { newProduct -> newProduct.id.toLong() == it.id } }
@@ -86,19 +86,19 @@ internal class ProductEntryDataSourceImpl(
     }
 
     override suspend fun markEntryAsDone(id: Long, userId: String) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             queries.markEntryAsDone(userId, id)
         }
     }
 
     override suspend fun markEntryUndone(id: Long) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             queries.markEntryUndone(id)
         }
     }
 
     override suspend fun editEntryContent(id: Long, content: String) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             queries.editEntryContent(content, id)
         }
     }

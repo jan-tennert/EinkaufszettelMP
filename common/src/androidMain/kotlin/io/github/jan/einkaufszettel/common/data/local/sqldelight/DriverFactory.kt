@@ -6,7 +6,18 @@ import com.squareup.sqldelight.db.SqlDriver
 import io.github.jan.einkaufszettel.common.data.local.EinkaufszettelDatabase
 
 actual class DriverFactory(private val context: Context) {
-    actual fun createDriver(): SqlDriver {
-        return AndroidSqliteDriver(EinkaufszettelDatabase.Schema, context, "einkaufszettel.db")
+
+    companion object {
+        private var driver: SqlDriver? = null
     }
+
+    actual suspend fun initDriver() {
+        driver = AndroidSqliteDriver(EinkaufszettelDatabase.Schema, context, "einkaufszettel.db")
+    }
+
+    actual fun driver(): SqlDriver {
+        return driver ?: throw IllegalStateException("Driver not initialized")
+    }
+
+
 }

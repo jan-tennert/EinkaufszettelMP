@@ -4,7 +4,7 @@ import com.squareup.sqldelight.runtime.coroutines.asFlow
 import com.squareup.sqldelight.runtime.coroutines.mapToList
 import einkaufszettel.db.ShopDto
 import io.github.jan.einkaufszettel.common.data.remote.Shop
-import kotlinx.coroutines.Dispatchers
+import io.github.jan.einkaufszettel.common.ioDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
@@ -85,7 +85,7 @@ internal class ShopDataSourceImpl(
     private val queries = db.shopDtoQueries
 
     override suspend fun deleteById(id: Long) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             queries.deleteShopById(id)
         }
     }
@@ -95,7 +95,7 @@ internal class ShopDataSourceImpl(
     }
 
     override suspend fun insertShop(shop: Shop) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             queries.insertShop(
                 id = shop.id.toLong(),
                 name = shop.name,
@@ -108,13 +108,13 @@ internal class ShopDataSourceImpl(
     }
 
     override suspend fun clearShops() {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             queries.clearShops()
         }
     }
 
     override suspend fun insertAll(shops: List<Shop>) {
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val oldData = queries.getAllShops().executeAsList()
             queries.transaction {
                 val toDelete = oldData.filter { shops.none { newShop -> newShop.id.toLong() == it.id } }

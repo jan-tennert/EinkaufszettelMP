@@ -17,16 +17,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import einkaufszettel.db.GetAllEntries
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
+import io.github.jan.einkaufszettel.common.data.local.DateTimeFormatter
 import io.github.jan.einkaufszettel.common.ui.dialog.EditEntryDialog
 import io.github.jan.einkaufszettel.common.ui.events.AlertDialog
 import io.github.jan.einkaufszettel.common.ui.icons.Delete
 import io.github.jan.einkaufszettel.common.ui.icons.LocalIcon
-import kotlinx.datetime.toJavaInstant
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
-private val FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+private val FORMATTER = DateTimeFormatter()
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -36,7 +33,7 @@ fun LazyItemScope.ProductEntryCard(product: GetAllEntries, viewModel: Einkaufsze
     var showEditDialog by remember { mutableStateOf(false) }
     ElevatedCard(modifier = Modifier.fillMaxWidth().padding(8.dp).combinedClickable(onLongClick = { showEditDialog = true }) {  }.animateItemPlacement()) {
         Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-            val formattedDate = remember(product) { FORMATTER.format(LocalDateTime.ofInstant(product.createdAt.toJavaInstant(), ZoneOffset.systemDefault())) }
+            val formattedDate = remember(product) { FORMATTER.format("dd.MM.yyyy HH:mm", product.createdAt) }
             if(loading) {
                 Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(modifier = Modifier.size(30.dp))

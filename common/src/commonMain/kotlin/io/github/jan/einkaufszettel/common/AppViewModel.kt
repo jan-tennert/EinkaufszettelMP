@@ -13,7 +13,6 @@ import io.github.jan.supabase.gotrue.providers.Google
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import io.github.jan.supabase.realtime.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -126,7 +125,7 @@ class EinkaufszettelViewModel(
     }
 
     fun loginWithEmail(config: Email.Config.() -> Unit) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 supabaseClient.gotrue.loginWith(Email, config = config)
             }.onFailure {
@@ -141,7 +140,7 @@ class EinkaufszettelViewModel(
     }
 
     fun signUpWithEmail(config: Email.Config.() -> Unit) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 supabaseClient.gotrue.signUpWith(Email, config = config)
             }.onFailure {
@@ -228,7 +227,7 @@ class EinkaufszettelViewModel(
     }
 
     fun logout() {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             supabaseClient.gotrue.invalidateSession()
             settings.setProfile(null)
         }
@@ -238,7 +237,7 @@ class EinkaufszettelViewModel(
 
     //for the start (so we don't need 3 transactions)
     fun retrieveAll() {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 val currentUserCache = localUserDataSource.retrieveAllUsers().map { it.id }
                 val products = productsApi.retrieveProducts()
@@ -259,7 +258,7 @@ class EinkaufszettelViewModel(
     }
 
     fun retrieveProducts() {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 productsApi.retrieveProducts()
             }.onSuccess {
@@ -269,7 +268,7 @@ class EinkaufszettelViewModel(
     }
 
     fun retrieveShops() {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 shopApi.retrieveShops()
             }.onSuccess {
@@ -280,7 +279,7 @@ class EinkaufszettelViewModel(
     }
 
     fun retrieveCards() {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 cardApi.retrieveCards()
             }.onSuccess {
@@ -325,7 +324,7 @@ class EinkaufszettelViewModel(
     }
 
     private fun checkForNewUsers(authorizedUsers: List<String>, owner: String) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             val currentCache = localUserDataSource.retrieveAllUsers().map { it.id }
             val newUsers = authorizedUsers.filter { it !in currentCache  } + owner
             if(newUsers.isNotEmpty()) {
@@ -387,7 +386,7 @@ class EinkaufszettelViewModel(
     //actual shopping list
     fun markEntryAsDone(id: Long, callback: () -> Unit) {
         val ownUserId = supabaseClient.gotrue.currentSessionOrNull()?.user?.id ?: throw IllegalStateException("Session shouldn't be null here")
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 productsApi.markAsDone(id.toInt(), ownUserId)
             }.onSuccess {
@@ -401,7 +400,7 @@ class EinkaufszettelViewModel(
     }
 
     fun markEntryAsNotDone(id: Long, callback: () -> Unit) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 productsApi.markAsUndone(id.toInt())
             }.onSuccess {
@@ -415,7 +414,7 @@ class EinkaufszettelViewModel(
     }
 
     fun deleteEntry(id: Long) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 productsApi.deleteProduct(id.toInt())
             }.onSuccess {
@@ -427,7 +426,7 @@ class EinkaufszettelViewModel(
     }
 
     fun createEntry(shopId: Long, content: String) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 productsApi.createProduct(shopId.toInt(), content, supabaseClient.gotrue.currentSessionOrNull()?.user?.id ?: throw IllegalStateException("Session shouldn't be null here"))
             }.onSuccess {
@@ -439,7 +438,7 @@ class EinkaufszettelViewModel(
     }
 
     fun editEntry(id: Long, content: String) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 productsApi.editContent(id.toInt(), content)
             }.onSuccess {
@@ -454,7 +453,7 @@ class EinkaufszettelViewModel(
     //shop creation & modification
     fun createShop(name: String, fileInfo: FileInfo, authorizedUsers: List<String>) {
         val ownId = supabaseClient.gotrue.currentSessionOrNull()?.user?.id ?: throw IllegalStateException("Session shouldn't be null here")
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 shopApi.createShop(name, fileInfo, ownId, authorizedUsers)
             }.onSuccess {
@@ -467,7 +466,7 @@ class EinkaufszettelViewModel(
     }
 
     fun editShop(id: Long, name: String, authorizedUsers: List<String>) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 shopApi.editShop(id.toInt(), name, authorizedUsers)
             }.onSuccess {
@@ -480,7 +479,7 @@ class EinkaufszettelViewModel(
     }
 
     fun deleteShop(id: Long, iconUrl: String) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 shopApi.deleteShop(id.toInt(), iconUrl)
             }.onSuccess {
@@ -495,7 +494,7 @@ class EinkaufszettelViewModel(
     //cards
     fun createCard(description: String, fileInfo: FileInfo, authorizedUsers: List<String>) {
         val ownId = supabaseClient.gotrue.currentSessionOrNull()?.user?.id ?: throw IllegalStateException("Session shouldn't be null here")
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 cardApi.createCard(description, authorizedUsers, fileInfo, ownId)
             }.onSuccess {
@@ -508,7 +507,7 @@ class EinkaufszettelViewModel(
     }
 
     fun editCard(id: Long, description: String, authorizedUsers: List<String>) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 cardApi.editCard(id.toInt(), description, authorizedUsers)
             }.onSuccess {
@@ -521,7 +520,7 @@ class EinkaufszettelViewModel(
     }
 
     fun deleteCard(id: Long, iconPath: String) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 cardApi.deleteCard(id.toInt(), iconPath)
             }.onSuccess {
@@ -535,7 +534,7 @@ class EinkaufszettelViewModel(
 
     //nutrition
     fun getNutritionFor(barcode: String) {
-        scope.launch(Dispatchers.IO) {
+        scope.launch(ioDispatcher) {
             kotlin.runCatching {
                 nutritionApi.retrieveNutritionData(barcode)
             }.onSuccess {

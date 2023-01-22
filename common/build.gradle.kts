@@ -23,6 +23,9 @@ kotlin {
             )
         }
     }
+    js(IR) {
+        browser()
+    }
     sourceSets {
         all {
             languageSettings.optIn("androidx.compose.material3.ExperimentalMaterial3Api")
@@ -43,6 +46,12 @@ kotlin {
                 api("com.russhwolf:multiplatform-settings-no-arg:${Versions.SETTINGS}")
                 api("com.russhwolf:multiplatform-settings-coroutines:${Versions.SETTINGS}")
                 api("com.arkivanov.essenty:instance-keeper:${Versions.ESSENTY}")
+              //  api("io.github.g0dkar:qrcode-kotlin:${Versions.QR_CODE}")
+            }
+        }
+        val nonJSMain by creating {
+            dependsOn(commonMain)
+            dependencies {
                 api("io.ktor:ktor-client-cio:${Versions.KTOR}")
                 api("io.github.g0dkar:qrcode-kotlin:${Versions.QR_CODE}")
             }
@@ -53,6 +62,7 @@ kotlin {
             }
         }
         val androidMain by getting {
+            dependsOn(nonJSMain)
             dependencies {
                 api("androidx.appcompat:appcompat:${Versions.COMPAT}")
                 api("androidx.core:core-ktx:${Versions.KTX}")
@@ -71,12 +81,20 @@ kotlin {
         }
         val androidTest by getting
         val desktopMain by getting {
+            dependsOn(nonJSMain)
             dependencies {
                 api(compose.preview)
                 api("com.squareup.sqldelight:sqlite-driver:${Versions.SQLDELIGHT}")
             }
         }
         val desktopTest by getting
+        val jsMain by getting {
+            dependencies {
+                api("io.ktor:ktor-client-js:${Versions.KTOR}")
+                api("com.squareup.sqldelight:sqljs-driver:${Versions.SQLDELIGHT}")
+                api("com.russhwolf:multiplatform-settings-test:${Versions.SETTINGS}")
+            }
+        }
     }
 }
 

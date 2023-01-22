@@ -6,12 +6,12 @@ import org.koin.core.context.startKoin
 fun initKoin(platformConfiguration: KoinApplication.() -> Unit = {}) = startKoin {
     platformConfiguration()
     modules(
-        databaseModule,
         supabaseModule,
         remoteModule,
         updateModule,
         localModule,
         settingsModule,
-        platformModule
+        platformModule,
+        databaseModule
     )
 }

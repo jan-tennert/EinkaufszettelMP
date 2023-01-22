@@ -6,6 +6,8 @@ import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.key
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import org.jetbrains.skia.Image
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -19,3 +21,6 @@ actual inline fun KeyEvent.handleEnter(onEnter: () -> Unit): Boolean {
 actual fun ByteArray.toComposeImage(): ImageBitmap {
     return Image.makeFromEncoded(this).toComposeImageBitmap()
 }
+
+actual val ioDispatcher: CoroutineDispatcher
+    get() = Dispatchers.IO
