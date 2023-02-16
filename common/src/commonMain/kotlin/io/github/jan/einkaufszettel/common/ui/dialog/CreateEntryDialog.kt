@@ -27,7 +27,8 @@ fun CreateEntryDialog(shopId: Long, viewModel: EinkaufszettelViewModel, close: (
     Dialog(close, "Eintrag erstellen", darkMode) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.background(MaterialTheme.colorScheme.background, RoundedCornerShape(10)).padding(10.dp)
         ) {
             var content by remember { mutableStateOf("") }
             OutlinedTextField(

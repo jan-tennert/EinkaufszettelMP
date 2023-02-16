@@ -1,10 +1,8 @@
 package io.github.jan.einkaufszettel.common.di
 
-import io.github.jan.supabase.gotrue.GoTrue
-import io.github.jan.supabase.gotrue.host
-import io.github.jan.supabase.gotrue.scheme
+import io.github.jan.supabase.gotrue.GoTrueConfig
 
-actual fun GoTrue.Config.setupPlatform() {
+actual fun GoTrueConfig.setupPlatform() {
     scheme = "shoppinglist"
     host = "login"
 }

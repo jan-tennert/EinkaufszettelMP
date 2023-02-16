@@ -33,7 +33,7 @@ kotlin {
                 api(compose.foundation)
                 api(compose.material3)
               //  api(compose.materialIconsExtended)
-                api(project.dependencies.platform("io.github.jan-tennert.supabase:bom:${Versions.SUPABASE}"))
+                api(platform("io.github.jan-tennert.supabase:bom:${Versions.SUPABASE}"))
                 api("io.github.jan-tennert.supabase:gotrue-kt")
                 api("io.github.jan-tennert.supabase:storage-kt")
                 api("io.github.jan-tennert.supabase:realtime-kt")

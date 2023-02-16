@@ -23,6 +23,7 @@ actual fun BarCodeScreen(viewModel: EinkaufszettelViewModel) {
     when(cameraPermissionState.status) {
         is PermissionStatus.Denied -> {
             SideEffect {
+                println("Permission denied")
                 cameraPermissionState.launchPermissionRequest()
             }
         }
