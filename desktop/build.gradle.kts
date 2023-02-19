@@ -37,7 +37,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Rpm, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "Einkaufszettel"
-            packageVersion = "1.0.7"
+            packageVersion = "1.0.8"
             modules("java.sql")
 
             val iconsRoot = project.file("src/jvmMain/resources")

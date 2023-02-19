@@ -244,7 +244,7 @@ class EinkaufszettelViewModel(
                 val products = productsApi.retrieveProducts()
                 val shops = shopApi.retrieveShops()
                 val cards = cardApi.retrieveCards()
-                val requiredUsers = (shops.map { it.authorizedUsers.filter { id -> id !in currentUserCache } } + cards.map { it.authorizedUsers?.filter { id -> id !in currentUserCache } ?: emptyList() }).flatten()
+                val requiredUsers = (shops.map { (it.authorizedUsers + it.ownerId).filter { id -> id !in currentUserCache } } + cards.map { it.authorizedUsers?.plus(it.ownerId)?.filter { id -> id !in currentUserCache } ?: emptyList() }).flatten()
                 val users = profileApi.retrieveProfilesFromIds(requiredUsers)
                 rootDataSource.insertAll(
                     products = products,
