@@ -6,7 +6,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import io.github.jan.einkaufszettel.common.ui.icons.*
+import io.github.jan.einkaufszettel.common.ui.icons.AccountCircle
+import io.github.jan.einkaufszettel.common.ui.icons.CreditCard
+import io.github.jan.einkaufszettel.common.ui.icons.Home
+import io.github.jan.einkaufszettel.common.ui.icons.ListAlt
+import io.github.jan.einkaufszettel.common.ui.icons.LocalIcon
+import io.github.jan.einkaufszettel.common.ui.icons.MaterialIconDimension
+import io.github.jan.einkaufszettel.common.ui.icons.Restaurant
+import io.github.jan.einkaufszettel.common.ui.icons.Settings
+import io.github.jan.einkaufszettel.common.ui.icons.resourceIcon
 import io.github.jan.supabase.CurrentPlatformTarget
 import io.github.jan.supabase.PlatformTarget
 
@@ -23,6 +31,7 @@ sealed interface NavigationTarget {
 
         object Home: Bottom("Startseite", "home", LocalIcon.Home)
         object ShoppingList: Bottom("Einkaufszettel", "shopping_list", LocalIcon.ListAlt)
+        object Recipes: Bottom("Rezepte", "recipes", LocalIcon.Restaurant)
         object Cards: Bottom("Karten", "cards", LocalIcon.CreditCard)
         object Scan: Bottom("Barcode Scanner", "scan","barcode_scanner.xml")
         object Account: Bottom("Account", "account", LocalIcon.AccountCircle)
@@ -32,6 +41,7 @@ sealed interface NavigationTarget {
             val ALL get() = buildList {
                 add(Home)
                 add(ShoppingList)
+                add(Recipes)
                 add(Cards)
                 if(CurrentPlatformTarget == PlatformTarget.ANDROID) add(Scan)
                 add(Account)

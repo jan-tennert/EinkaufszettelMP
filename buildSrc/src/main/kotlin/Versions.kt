@@ -1,8 +1,8 @@
 object Versions {
 
-    const val KTOR = "2.2.2"
+    const val KTOR = "2.2.4"
     const val KOTLINX_DATETIME = "0.4.0"
-    const val SUPABASE = "0.8.0-alpha-1"
+    const val SUPABASE = "0.9.0-beta-4"
     const val COMPAT = "1.5.1"
     const val KTX = "1.9.0"
     const val ACTIVITY_COMPOSE = "1.3.0"

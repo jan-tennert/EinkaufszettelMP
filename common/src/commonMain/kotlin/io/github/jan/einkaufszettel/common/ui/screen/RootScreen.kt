@@ -3,7 +3,13 @@ package io.github.jan.einkaufszettel.common.ui.screen
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import io.github.jan.einkaufszettel.common.Einkaufszettel
@@ -29,6 +35,7 @@ fun RootScreen(viewModel: EinkaufszettelViewModel) {
     }
 
     val sessionStatus by viewModel.sessionStatus.collectAsState()
+    println(sessionStatus)
     when(sessionStatus) {
         SessionStatus.LoadingFromStorage -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

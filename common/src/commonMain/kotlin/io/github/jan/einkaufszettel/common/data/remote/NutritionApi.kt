@@ -22,9 +22,9 @@ data class ProductInfo(
     @Transient
     val isGlutenFree = "gluten" !in rawAllergens
     @Transient
-    val isMilkFree = "milk" !in rawAllergens
+    val isMilkFree = "milk" !in rawAllergens && !rawAllergensIngredients.lowercase().contains("milch") && !rawAllergensIngredients.lowercase().contains("sahne")
     @Transient
-    val isNutFree = "nuts" !in rawAllergens
+    val isNutFree = "nuts" !in rawAllergens && !rawAllergensIngredients.lowercase().contains("nuts")
     @Transient
     val ingredients = rawAllergensIngredients.split(",").drop(1)
 
@@ -47,7 +47,7 @@ internal class NutritionApiImpl(
 ): NutritionApi {
 
     override suspend fun retrieveNutritionData(barcode: String): NutritionData? {
-        val response = httpClient.get("https://world.openfoodfacts.org/api/v2/product/3017620422003")
+        val response = httpClient.get("https://world.openfoodfacts.org/api/v2/product/$barcode")
         return try {
             response.body<NutritionData>()
         } catch (e: Exception) {

@@ -17,22 +17,26 @@ dependencies {
     implementation("androidx.activity:activity-compose:${Versions.ACTIVITY_COMPOSE}")
 }
 
+kotlin {
+    jvmToolchain(11)
+}
+
 android {
-    compileSdkVersion(33)
+    compileSdk = 33
     defaultConfig {
         applicationId = "io.github.jan.shopping"
-        minSdkVersion(24)
-        targetSdkVersion(33)
+        minSdk = 26
         versionCode = 1
         versionName = "1.0"
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            signingConfig = null
         }
         debug {
             //  isMinifyEnabled = true
@@ -40,6 +44,11 @@ android {
     }
     lint {
         abortOnError = false
+    }
+    signingConfigs {
+        create("signingConfigRelease") {
+            enableV1Signing = false
+        }
     }
 }
 

@@ -22,6 +22,7 @@ kotlin {
                 "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
             )
         }
+        jvmToolchain(11)
     }
     sourceSets {
         all {
@@ -32,7 +33,7 @@ kotlin {
                 api(compose.runtime)
                 api(compose.foundation)
                 api(compose.material3)
-              //  api(compose.materialIconsExtended)
+                api(compose.materialIconsExtended)
                 api(platform("io.github.jan-tennert.supabase:bom:${Versions.SUPABASE}"))
                 api("io.github.jan-tennert.supabase:gotrue-kt")
                 api("io.github.jan-tennert.supabase:storage-kt")
@@ -81,18 +82,20 @@ kotlin {
 }
 
 android {
-    compileSdkVersion(31)
+    compileSdk = 33
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].apply {
         res.srcDirs("src/androidMain/res", "src/commonMain/resources")
     }
     defaultConfig {
-        minSdkVersion(24)
-        targetSdkVersion(31)
+        minSdk = 26
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    lint {
+        abortOnError = false
     }
 }
 

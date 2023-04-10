@@ -3,15 +3,40 @@ package io.github.jan.einkaufszettel.common
 import androidx.compose.runtime.mutableStateListOf
 import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import io.github.aakira.napier.Napier
-import io.github.jan.einkaufszettel.common.data.local.*
-import io.github.jan.einkaufszettel.common.data.remote.*
+import io.github.jan.einkaufszettel.common.data.local.CardDataSource
+import io.github.jan.einkaufszettel.common.data.local.ClipboardManager
+import io.github.jan.einkaufszettel.common.data.local.EinkaufszettelSettings
+import io.github.jan.einkaufszettel.common.data.local.LocalUserDataSource
+import io.github.jan.einkaufszettel.common.data.local.ProductEntryDataSource
+import io.github.jan.einkaufszettel.common.data.local.RecipeDataSource
+import io.github.jan.einkaufszettel.common.data.local.RootDataSource
+import io.github.jan.einkaufszettel.common.data.local.ShopDataSource
+import io.github.jan.einkaufszettel.common.data.local.UpdateInstaller
+import io.github.jan.einkaufszettel.common.data.remote.AutoUpdater
+import io.github.jan.einkaufszettel.common.data.remote.Card
+import io.github.jan.einkaufszettel.common.data.remote.CardApi
+import io.github.jan.einkaufszettel.common.data.remote.FileInfo
+import io.github.jan.einkaufszettel.common.data.remote.NutritionApi
+import io.github.jan.einkaufszettel.common.data.remote.NutritionData
+import io.github.jan.einkaufszettel.common.data.remote.ProductEntryApi
+import io.github.jan.einkaufszettel.common.data.remote.ProfileApi
+import io.github.jan.einkaufszettel.common.data.remote.Recipe
+import io.github.jan.einkaufszettel.common.data.remote.RecipeApi
+import io.github.jan.einkaufszettel.common.data.remote.RemoteUser
+import io.github.jan.einkaufszettel.common.data.remote.Shop
+import io.github.jan.einkaufszettel.common.data.remote.ShopApi
 import io.github.jan.einkaufszettel.common.ui.events.UIEvent
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.exceptions.RestException
 import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.gotrue.providers.Google
 import io.github.jan.supabase.gotrue.providers.builtin.Email
-import io.github.jan.supabase.realtime.*
+import io.github.jan.supabase.realtime.PostgresAction
+import io.github.jan.supabase.realtime.Realtime
+import io.github.jan.supabase.realtime.RealtimeChannel
+import io.github.jan.supabase.realtime.decodeRecordOrNull
+import io.github.jan.supabase.realtime.postgresChangeFlow
+import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -44,6 +69,8 @@ class EinkaufszettelViewModel(
     private val updateInstaller: UpdateInstaller,
     private val nutritionApi: NutritionApi,
     private val realtimeChannel: RealtimeChannel,
+    private val recipeApi: RecipeApi,
+    private val recipeDataSource: RecipeDataSource,
     val clipboardManager: ClipboardManager,
     val supabaseClient: SupabaseClient
 ): AppViewModel() {
@@ -60,12 +87,14 @@ class EinkaufszettelViewModel(
     val downloadProgress = MutableStateFlow(0f)
     val latestVersion = MutableStateFlow(0)
     val cardFlow = cardDataSource.getCards()
+    val recipeFlow = recipeDataSource.getRecipes()
     val events = mutableStateListOf<UIEvent>()
 
     //realtime
     private var shopChangeFlowJob = MutableStateFlow<Job?>(null)
     private var productChangeFlowJob = MutableStateFlow<Job?>(null)
     private var cardChangeFlowJob = MutableStateFlow<Job?>(null)
+    private var recipeChangeFlowJob = MutableStateFlow<Job?>(null)
 
     init {
         scope.launch {
@@ -101,6 +130,11 @@ class EinkaufszettelViewModel(
                 table = "cards"
             }.onEach {
                 handleCardChange(it)
+            }.launchIn(scope)
+            recipeChangeFlowJob.value = realtimeChannel.postgresChangeFlow<PostgresAction>("public") {
+                table = "recipes"
+            }.onEach {
+                handleRecipeChange(it)
             }.launchIn(scope)
             realtimeChannel.join()
         }
@@ -268,6 +302,16 @@ class EinkaufszettelViewModel(
         }
     }
 
+    fun retrieveRecipes() {
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                recipeApi.retrieveRecipes()
+            }.onSuccess {
+                recipeDataSource.insertAll(it)
+            }
+        }
+    }
+
     fun retrieveShops() {
         scope.launch(Dispatchers.IO) {
             kotlin.runCatching {
@@ -380,6 +424,72 @@ class EinkaufszettelViewModel(
                     cardDataSource.insertCard(card)
                 }
                 else -> {}
+            }
+        }
+    }
+
+    private fun handleRecipeChange(action: PostgresAction) {
+        scope.launch {
+            when(action) {
+                is PostgresAction.Delete -> recipeDataSource.deleteRecipeById(action.oldRecord["id"]?.jsonPrimitive?.longOrNull ?: throw IllegalStateException("Realtime delete without id (recipes)"))
+                is PostgresAction.Insert -> {
+                    val recipe = action.decodeRecordOrNull<Recipe>() ?: throw IllegalStateException("Couldn't decode new recipe record")
+                    checkForNewUsers(listOf(), recipe.creatorId)
+                    recipeDataSource.insertRecipe(recipe)
+                }
+                is PostgresAction.Update -> {
+                    val recipe = action.decodeRecordOrNull<Recipe>() ?: throw IllegalStateException("Couldn't decode new recipe record")
+                    checkForNewUsers(listOf(), recipe.creatorId)
+                    recipeDataSource.insertRecipe(recipe)
+                }
+                else -> {}
+            }
+        }
+    }
+
+    //recipes
+    fun createRecipe(name: String, fileInfo: FileInfo?, steps: String?, ingredients: List<String>, private: Boolean) {
+        val ownUserId = supabaseClient.gotrue.currentSessionOrNull()?.user?.id ?: throw IllegalStateException("Session shouldn't be null here")
+        scope.launch {
+            kotlin.runCatching {
+                recipeApi.createRecipe(name, ownUserId, fileInfo, ingredients, steps, private)
+            }.onSuccess {
+                recipeDataSource.insertRecipe(it)
+            }.onFailure {
+                when(it) {
+                    is RestException -> events.add(UIEvent.Alert("Fehler beim Erstellen des Rezepts. Bitte überprüfe deine Internetverbindung"))
+                    else -> events.add(UIEvent.Alert("Fehler beim Erstellen des Rezepts. Bitte überprüfe deine Internetverbindung"))
+                }
+            }
+        }
+    }
+
+    fun deleteRecipe(id: Long) {
+        scope.launch {
+            kotlin.runCatching {
+                recipeApi.deleteRecipe(id.toInt())
+            }.onSuccess {
+                recipeDataSource.deleteRecipeById(id)
+            }.onFailure {
+                when(it) {
+                    is RestException -> events.add(UIEvent.Alert("Fehler beim Löschen des Rezepts. Bitte überprüfe deine Internetverbindung"))
+                    else -> events.add(UIEvent.Alert("Fehler beim Löschen des Rezepts. Bitte überprüfe deine Internetverbindung"))
+                }
+            }
+        }
+    }
+
+    fun updateRecipe(id: Long, name: String, fileInfo: FileInfo?, steps: String?, ingredients: List<String>, private: Boolean) {
+        scope.launch {
+            kotlin.runCatching {
+                recipeApi.editRecipe(id.toInt(), name, fileInfo, ingredients, steps, private)
+            }.onSuccess {
+                recipeDataSource.insertRecipe(it)
+            }.onFailure {
+                when(it) {
+                    is RestException -> events.add(UIEvent.Alert("Fehler beim Aktualisieren des Rezepts. Bitte überprüfe deine Internetverbindung"))
+                    else -> events.add(UIEvent.Alert("Fehler beim Aktualisieren des Rezepts. Bitte überprüfe deine Internetverbindung"))
+                }
             }
         }
     }

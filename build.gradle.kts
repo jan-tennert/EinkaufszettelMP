@@ -1,6 +1,10 @@
 group = "io.github.jan.einkaufszettel"
 version = "1.0-SNAPSHOT"
 
+buildscript {
+    extra["kotlin_version"] = "1.8.20"
+}
+
 allprojects {
     repositories {
         google()

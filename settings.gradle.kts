@@ -35,6 +35,10 @@ dependencyResolutionManagement {
     }
 }
 
+buildscript {
+    extra["kotlin_version"] = "1.8.20"
+}
+
 rootProject.name = "Einkaufszettel"
 
 include(":android", ":desktop", ":common")
