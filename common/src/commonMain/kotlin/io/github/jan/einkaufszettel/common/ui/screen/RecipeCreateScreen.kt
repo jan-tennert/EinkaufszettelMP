@@ -39,6 +39,7 @@ import io.github.jan.einkaufszettel.common.ui.components.ImageChooser
 import io.github.jan.einkaufszettel.common.ui.components.IngredientCreateItem
 import io.github.jan.einkaufszettel.common.ui.dialog.IngredientDialog
 import io.github.jan.einkaufszettel.common.ui.events.UIEvent
+import io.github.jan.einkaufszettel.common.ui.icons.ArrowBack
 import io.github.jan.einkaufszettel.common.ui.icons.Done
 import io.github.jan.einkaufszettel.common.ui.icons.LocalIcon
 import io.github.jan.einkaufszettel.common.ui.icons.QuestionMark
@@ -168,6 +169,17 @@ fun RecipeCreateScreen(placeholder: GetAllRecipes? = null, viewModel: Einkaufsze
         }
     }
 
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomStart
+    ) {
+        ActionButton(
+            location = Alignment.BottomStart,
+            onClick = back
+        ) {
+            Icon(LocalIcon.ArrowBack, "Back")
+        }
+    }
 
     if(showIngredientDialog) {
         IngredientDialog({
