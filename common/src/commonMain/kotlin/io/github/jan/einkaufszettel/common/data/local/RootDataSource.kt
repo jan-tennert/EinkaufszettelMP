@@ -2,6 +2,7 @@ package io.github.jan.einkaufszettel.common.data.local
 
 import io.github.jan.einkaufszettel.common.data.remote.Card
 import io.github.jan.einkaufszettel.common.data.remote.ProductEntry
+import io.github.jan.einkaufszettel.common.data.remote.Recipe
 import io.github.jan.einkaufszettel.common.data.remote.RemoteUser
 import io.github.jan.einkaufszettel.common.data.remote.Shop
 
@@ -11,7 +12,8 @@ interface RootDataSource {
         shops: List<Shop>,
         cards: List<Card>,
         products: List<ProductEntry>,
-        users: List<RemoteUser>
+        users: List<RemoteUser>,
+        recipes: List<Recipe>
     )
 
 }
@@ -24,11 +26,13 @@ internal class RootDataSourceImpl(
         shops: List<Shop>,
         cards: List<Card>,
         products: List<ProductEntry>,
-        users: List<RemoteUser>
+        users: List<RemoteUser>,
+        recipes: List<Recipe>
     ) {
         val oldShops = database.shopDtoQueries.getAllShops().executeAsList()
         val oldProducts = database.productEntryQueries.getAllEntries().executeAsList()
         val oldCards = database.cardDtoQueries.getAllCards().executeAsList()
+        val oldRecipes = database.recipeDtoQueries.getAllRecipes().executeAsList()
         database.transaction {
             users.forEach {
                 database.localUserDtoQueries.insertUser(
@@ -69,6 +73,22 @@ internal class RootDataSourceImpl(
                     authorizedUsers = it.authorizedUsers
                 )
             }
+
+            recipes.forEach { recipe ->
+                database.recipeDtoQueries.insertRecipe(
+                    id = recipe.id.toLong(),
+                    createdAt = recipe.createdAt,
+                    creatorId = recipe.creatorId,
+                    imagePath = recipe.imagePath,
+                    name = recipe.name,
+                    ingredients = recipe.ingredients,
+                    steps = recipe.steps,
+                    isPrivate = recipe.private
+                )
+            }
+
+            val toDeleteRecipes = oldRecipes.filter { recipes.none { newRecipe -> newRecipe.id.toLong() == it.id } }
+            toDeleteRecipes.forEach { database.recipeDtoQueries.deleteRecipeById(it.id) }
 
             val toDelete = oldShops.filter { shops.none { newShop -> newShop.id.toLong() == it.id } }
             toDelete.forEach { database.shopDtoQueries.deleteShopById(it.id) }

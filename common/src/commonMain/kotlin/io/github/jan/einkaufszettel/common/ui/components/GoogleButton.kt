@@ -9,15 +9,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
 import io.github.jan.einkaufszettel.common.ui.icons.resourceIcon
 
 @Composable
 fun GoogleButton(
-    modifier: Modifier = Modifier,
-    text: String = "Sign Up with Google",
-    onClicked: () -> Unit
+modifier: Modifier,
+text: String,
+viewModel: EinkaufszettelViewModel
 ) {
-    OutlinedButton(onClicked, modifier) {
+    OutlinedButton({ viewModel.loginWithGoogle() }, modifier) {
         Icon(
             painter = resourceIcon("google_logo.xml"),
             contentDescription = "Google Button",

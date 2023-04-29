@@ -7,6 +7,7 @@ import io.github.jan.supabase.gotrue.GoTrue
 import io.github.jan.supabase.gotrue.GoTrueConfig
 import io.github.jan.supabase.gotrue.SettingsSessionManager
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.postgrest.PropertyConversionMethod
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.createChannel
 import io.github.jan.supabase.realtime.realtime
@@ -25,7 +26,9 @@ val supabaseModule = module {
                 setupPlatform()
             }
             install(Storage)
-            install(Postgrest)
+            install(Postgrest) {
+                propertyConversionMethod = PropertyConversionMethod.SERIAL_NAME
+            }
             install(Realtime) {
                 heartbeatInterval = 30.seconds
             }

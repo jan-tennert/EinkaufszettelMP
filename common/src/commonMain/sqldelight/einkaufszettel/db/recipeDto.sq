@@ -15,7 +15,7 @@ CREATE TABLE recipeDto (
 );
 
 getAllRecipes:
-SELECT recipe.id, recipe.createdAt, recipe.name, recipe.imagePath, recipe.ingredients, recipe.steps, recipe.isPrivate, creator.username AS creator
+SELECT recipe.id, recipe.createdAt, recipe.name, recipe.imagePath, recipe.ingredients, recipe.steps, recipe.isPrivate, creator.username AS creator, recipe.creatorId AS creatorId
 FROM recipeDto AS recipe
 LEFT JOIN localUserDto creator
 ON recipe.creatorId = creator.id;

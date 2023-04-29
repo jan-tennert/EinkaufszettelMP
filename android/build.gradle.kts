@@ -45,11 +45,6 @@ android {
     lint {
         abortOnError = false
     }
-    signingConfigs {
-        create("signingConfigRelease") {
-            enableV1Signing = false
-        }
-    }
 }
 
 compose {

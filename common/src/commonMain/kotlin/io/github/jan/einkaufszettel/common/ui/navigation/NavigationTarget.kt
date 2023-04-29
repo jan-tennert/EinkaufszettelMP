@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import io.github.jan.einkaufszettel.common.ui.icons.AccountCircle
 import io.github.jan.einkaufszettel.common.ui.icons.CreditCard
 import io.github.jan.einkaufszettel.common.ui.icons.Home
 import io.github.jan.einkaufszettel.common.ui.icons.ListAlt
@@ -34,7 +33,7 @@ sealed interface NavigationTarget {
         object Recipes: Bottom("Rezepte", "recipes", LocalIcon.Restaurant)
         object Cards: Bottom("Karten", "cards", LocalIcon.CreditCard)
         object Scan: Bottom("Barcode Scanner", "scan","barcode_scanner.xml")
-        object Account: Bottom("Account", "account", LocalIcon.AccountCircle)
+      //  object Account: Bottom("Account", "account", LocalIcon.AccountCircle)
         object Settings: Bottom("Einstellungen", "settings", LocalIcon.Settings)
 
         companion object {
@@ -44,7 +43,7 @@ sealed interface NavigationTarget {
                 add(Recipes)
                 add(Cards)
                 if(CurrentPlatformTarget == PlatformTarget.ANDROID) add(Scan)
-                add(Account)
+          //      add(Account)
                 add(Settings)
             }
         }

@@ -2,13 +2,21 @@ package io.github.jan.einkaufszettel.common.ui.screen
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
-import io.github.jan.einkaufszettel.common.ui.navigation.*
+import io.github.jan.einkaufszettel.common.ui.navigation.NavController
+import io.github.jan.einkaufszettel.common.ui.navigation.NavigationHost
+import io.github.jan.einkaufszettel.common.ui.navigation.NavigationTarget
+import io.github.jan.einkaufszettel.common.ui.navigation.composable
+import io.github.jan.einkaufszettel.common.ui.navigation.rememberNavController
 
 @Composable
 expect fun BackHandle(action: () -> Unit)
@@ -27,9 +35,6 @@ fun MainScreen(viewModel: EinkaufszettelViewModel) {
                 composable(NavigationTarget.Bottom.Home::class) {
                     HomeScreen(viewModel)
                 }
-                composable(NavigationTarget.Bottom.Account::class) {
-                    AccountScreen(viewModel)
-                }
                 composable(NavigationTarget.Bottom.ShoppingList::class) {
                     ShoppingListScreen(viewModel)
                 }
@@ -41,6 +46,9 @@ fun MainScreen(viewModel: EinkaufszettelViewModel) {
                 }
                 composable(NavigationTarget.Bottom.Settings::class) {
                     SettingsScreen(viewModel)
+                }
+                composable(NavigationTarget.Bottom.Recipes::class) {
+                    RecipeScreen(viewModel)
                 }
             }.build()
         }

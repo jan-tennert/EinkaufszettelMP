@@ -33,12 +33,13 @@ kotlin {
                 api(compose.runtime)
                 api(compose.foundation)
                 api(compose.material3)
-                api(compose.materialIconsExtended)
+            //    api(compose.materialIconsExtended)
                 api(platform("io.github.jan-tennert.supabase:bom:${Versions.SUPABASE}"))
                 api("io.github.jan-tennert.supabase:gotrue-kt")
                 api("io.github.jan-tennert.supabase:storage-kt")
                 api("io.github.jan-tennert.supabase:realtime-kt")
                 api("io.github.jan-tennert.supabase:postgrest-kt")
+                api("io.github.jan-tennert.supabase:functions-kt")
                 api("com.squareup.sqldelight:coroutines-extensions:${Versions.SQLDELIGHT}")
                 api("io.insert-koin:koin-core:${Versions.KOIN}")
                 api("com.russhwolf:multiplatform-settings-no-arg:${Versions.SETTINGS}")
@@ -68,6 +69,7 @@ kotlin {
                 api("androidx.camera:camera-lifecycle:${Versions.CAMERAX}")
                 api("androidx.camera:camera-view:${Versions.CAMERAX}")
                 api("com.google.mlkit:barcode-scanning:${Versions.BARCODE}")
+                api("io.insert-koin:koin-androidx-compose:3.4.3")
             }
         }
         val androidTest by getting
@@ -96,6 +98,14 @@ android {
     }
     lint {
         abortOnError = false
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+        }
+        debug {
+            //  isMinifyEnabled = true
+        }
     }
 }
 

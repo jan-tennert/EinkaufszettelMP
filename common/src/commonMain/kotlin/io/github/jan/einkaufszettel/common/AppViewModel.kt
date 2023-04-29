@@ -31,6 +31,7 @@ import io.github.jan.supabase.exceptions.RestException
 import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.gotrue.providers.Google
 import io.github.jan.supabase.gotrue.providers.builtin.Email
+import io.github.jan.supabase.gotrue.providers.builtin.IDToken
 import io.github.jan.supabase.realtime.PostgresAction
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.realtime.RealtimeChannel
@@ -113,30 +114,32 @@ class EinkaufszettelViewModel(
 
     fun connectToRealtime() {
         scope.launch {
-            if(supabaseClient.realtime.status.value == Realtime.Status.CONNECTED) return@launch
-            if(realtimeChannel.status.value == RealtimeChannel.Status.JOINED) return@launch
-            supabaseClient.realtime.connect()
-            productChangeFlowJob.value = realtimeChannel.postgresChangeFlow<PostgresAction>("public") {
-                table = "products"
-            }.onEach {
-                handleProductChange(it)
-            }.launchIn(scope)
-            shopChangeFlowJob.value = realtimeChannel.postgresChangeFlow<PostgresAction>("public") {
-                table = "shops"
-            }.onEach {
-                handleShopChange(it)
-            }.launchIn(scope)
-            cardChangeFlowJob.value = realtimeChannel.postgresChangeFlow<PostgresAction>("public") {
-                table = "cards"
-            }.onEach {
-                handleCardChange(it)
-            }.launchIn(scope)
-            recipeChangeFlowJob.value = realtimeChannel.postgresChangeFlow<PostgresAction>("public") {
-                table = "recipes"
-            }.onEach {
-                handleRecipeChange(it)
-            }.launchIn(scope)
-            realtimeChannel.join()
+            kotlin.runCatching {
+                if(supabaseClient.realtime.status.value == Realtime.Status.CONNECTED) return@launch
+                if(realtimeChannel.status.value == RealtimeChannel.Status.JOINED) return@launch
+                supabaseClient.realtime.connect()
+                productChangeFlowJob.value = realtimeChannel.postgresChangeFlow<PostgresAction>("public") {
+                    table = "products"
+                }.onEach {
+                    handleProductChange(it)
+                }.launchIn(scope)
+                shopChangeFlowJob.value = realtimeChannel.postgresChangeFlow<PostgresAction>("public") {
+                    table = "shops"
+                }.onEach {
+                    handleShopChange(it)
+                }.launchIn(scope)
+                cardChangeFlowJob.value = realtimeChannel.postgresChangeFlow<PostgresAction>("public") {
+                    table = "cards"
+                }.onEach {
+                    handleCardChange(it)
+                }.launchIn(scope)
+                recipeChangeFlowJob.value = realtimeChannel.postgresChangeFlow<PostgresAction>("public") {
+                    table = "recipes"
+                }.onEach {
+                    handleRecipeChange(it)
+                }.launchIn(scope)
+                realtimeChannel.join()
+            }
         }
     }
 
@@ -153,6 +156,20 @@ class EinkaufszettelViewModel(
         scope.launch {
             kotlin.runCatching {
                 supabaseClient.gotrue.loginWith(Google)
+            }.onSuccess {
+                retrieveProfile()
+            }
+        }
+    }
+
+    fun loginWithIdToken(idToken: String) {
+        scope.launch {
+            kotlin.runCatching {
+                supabaseClient.gotrue.loginWith(IDToken) {
+                    this.idToken = idToken
+                    clientId = "178705897393-64ql7tu06vs2bdlr0s1l5a42otbfe7or.apps.googleusercontent.com"
+                    provider = Google
+                }
             }.onSuccess {
                 retrieveProfile()
             }
@@ -278,13 +295,15 @@ class EinkaufszettelViewModel(
                 val products = productsApi.retrieveProducts()
                 val shops = shopApi.retrieveShops()
                 val cards = cardApi.retrieveCards()
-                val requiredUsers = (shops.map { (it.authorizedUsers + it.ownerId).filter { id -> id !in currentUserCache } } + cards.map { it.authorizedUsers?.plus(it.ownerId)?.filter { id -> id !in currentUserCache } ?: emptyList() }).flatten()
+                val recipes = recipeApi.retrieveRecipes()
+                val requiredUsers = (shops.map { (it.authorizedUsers + it.ownerId).filter { id -> id !in currentUserCache } }  + cards.map { it.authorizedUsers?.plus(it.ownerId)?.filter { id -> id !in currentUserCache } ?: emptyList() }).flatten() + recipes.map { it.creatorId }
                 val users = profileApi.retrieveProfilesFromIds(requiredUsers)
                 rootDataSource.insertAll(
                     products = products,
                     shops = shops,
                     cards = cards,
-                    users = users
+                    users = users,
+                    recipes = recipes
                 )
             }.onFailure {
                 it.printStackTrace()
@@ -438,6 +457,7 @@ class EinkaufszettelViewModel(
                     recipeDataSource.insertRecipe(recipe)
                 }
                 is PostgresAction.Update -> {
+                    println(action.record)
                     val recipe = action.decodeRecordOrNull<Recipe>() ?: throw IllegalStateException("Couldn't decode new recipe record")
                     checkForNewUsers(listOf(), recipe.creatorId)
                     recipeDataSource.insertRecipe(recipe)
@@ -456,6 +476,7 @@ class EinkaufszettelViewModel(
             }.onSuccess {
                 recipeDataSource.insertRecipe(it)
             }.onFailure {
+                it.printStackTrace()
                 when(it) {
                     is RestException -> events.add(UIEvent.Alert("Fehler beim Erstellen des Rezepts. Bitte überprüfe deine Internetverbindung"))
                     else -> events.add(UIEvent.Alert("Fehler beim Erstellen des Rezepts. Bitte überprüfe deine Internetverbindung"))
@@ -504,6 +525,7 @@ class EinkaufszettelViewModel(
                 productEntryDataSource.markEntryAsDone(id, ownUserId)
                 callback()
             }.onFailure {
+                it.printStackTrace()
                 callback()
                 events.add(UIEvent.Alert("Fehler beim Markieren des Produkts als erledigt. Bitte überprüfe deine Internetverbindung"))
             }

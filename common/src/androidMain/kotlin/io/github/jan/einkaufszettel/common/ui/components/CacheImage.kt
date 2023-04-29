@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import io.github.jan.einkaufszettel.common.toComposeImage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 actual fun CacheImage(
@@ -18,13 +20,17 @@ actual fun CacheImage(
 ) {
     val cacheDir = LocalContext.current.cacheDir
     val bitmap by produceState<ImageBitmap?>(null) {
-        val path = cacheDir.resolve(fileName)
-        value = if(path.exists()) {
-            path.readBytes().toComposeImage()
-        } else {
-            val bytes = produceImage()
-            path.writeBytes(bytes)
-            bytes.toComposeImage()
+        launch(Dispatchers.IO) {
+            runCatching {
+                val path = cacheDir.resolve(fileName)
+                value = if(path.exists()) {
+                    path.readBytes().toComposeImage()
+                } else {
+                    val bytes = produceImage()
+                    path.writeBytes(bytes)
+                    bytes.toComposeImage()
+                }
+            }
         }
     }
     if(bitmap == null) {

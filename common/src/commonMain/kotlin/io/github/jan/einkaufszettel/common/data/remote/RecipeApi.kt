@@ -20,7 +20,7 @@ data class Recipe(
     @SerialName("creator_id")
     val creatorId: String,
     @SerialName("image_path")
-    val imagePath: String,
+    val imagePath: String?,
     val name: String,
     val ingredients: List<String>,
     val steps: String,
@@ -77,7 +77,9 @@ internal class RecipeApiImpl(
         return table.update(
             {
                 Recipe::name setTo name
-                Recipe::imagePath setTo imagePath
+                imagePath?.let {
+                    Recipe::imagePath setTo it
+                }
                 Recipe::ingredients setTo ingredients
                 Recipe::steps setTo steps
             }
