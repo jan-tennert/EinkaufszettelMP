@@ -14,7 +14,17 @@ import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonEncoder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 
 object ShopDtpSerializer: KSerializer<ShopDto> {
 
@@ -46,7 +56,9 @@ object ShopDtpSerializer: KSerializer<ShopDto> {
             iconUrl = iconUrl,
             ownerId = ownerId,
             authorizedUsers = authorizedUsers,
-            createdAt = createdAt
+            createdAt = createdAt,
+            isVisible = true,
+            isPinned = false
         )
     }
 
@@ -76,6 +88,10 @@ interface ShopDataSource {
 
     suspend fun insertAll(shops: List<Shop>)
 
+    suspend fun changeShopVisibility(id: Long, isVisible: Boolean)
+
+    suspend fun changeShopPinned(id: Long, isPinned: Boolean)
+
 }
 
 internal class ShopDataSourceImpl(
@@ -102,7 +118,9 @@ internal class ShopDataSourceImpl(
                 createdAt = shop.createdAt,
                 iconUrl = shop.iconUrl,
                 ownerId = shop.ownerId,
-                authorizedUsers = shop.authorizedUsers
+                authorizedUsers = shop.authorizedUsers,
+                isVisible = true,
+                isPinned = false
             )
         }
     }
@@ -119,19 +137,34 @@ internal class ShopDataSourceImpl(
             queries.transaction {
                 val toDelete = oldData.filter { shops.none { newShop -> newShop.id.toLong() == it.id } }
                 shops.forEach {
+                    val oldShop = oldData.firstOrNull { oldShop -> oldShop.id == it.id.toLong() }
                     queries.insertShop(
                         id = it.id.toLong(),
                         name = it.name,
                         createdAt = it.createdAt,
                         iconUrl = it.iconUrl,
                         ownerId = it.ownerId,
-                        authorizedUsers = it.authorizedUsers
+                        authorizedUsers = it.authorizedUsers,
+                        isVisible = oldShop?.isVisible ?: true,
+                        isPinned = oldShop?.isPinned ?: false
                     )
                 }
                 toDelete.forEach {
                     queries.deleteShopById(it.id)
                 }
             }
+        }
+    }
+
+    override suspend fun changeShopVisibility(id: Long, isVisible: Boolean) {
+        withContext(Dispatchers.IO) {
+            queries.changeShopVisibility(isVisible, id)
+        }
+    }
+
+    override suspend fun changeShopPinned(id: Long, isPinned: Boolean) {
+        withContext(Dispatchers.IO) {
+            queries.changeShopPinned(isPinned, id)
         }
     }
 

@@ -8,6 +8,8 @@ CREATE TABLE shopDto (
     iconUrl TEXT NOT NULL,
     ownerId TEXT NOT NULL,
     authorizedUsers TEXT AS List<String> NOT NULL,
+    isVisible INTEGER AS Boolean NOT NULL,
+    isPinned INTEGER AS Boolean NOT NULL,
     FOREIGN KEY (ownerId) REFERENCES localUserDto(id)
 );
 
@@ -17,7 +19,17 @@ SELECT * FROM shopDto;
 insertShop:
 INSERT OR REPLACE
 INTO shopDto
-VALUES(?, ?, ?, ?, ?, ?);
+VALUES(?, ?, ?, ?, ?, ?, ?, ?);
+
+changeShopVisibility:
+UPDATE shopDto
+SET isVisible = :isVisible
+WHERE id = :id;
+
+changeShopPinned:
+UPDATE shopDto
+SET isPinned = :isPinned
+WHERE id = :id;
 
 deleteShopById:
 DELETE

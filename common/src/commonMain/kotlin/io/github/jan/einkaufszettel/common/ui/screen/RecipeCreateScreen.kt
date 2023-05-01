@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -51,6 +51,7 @@ fun RecipeCreateScreen(placeholder: GetAllRecipes? = null, viewModel: Einkaufsze
     var showIngredientDialog by remember { mutableStateOf(false) }
     var showStepDialog by remember { mutableStateOf(false) }
     val ingredients = remember { mutableStateListOf(*(placeholder?.ingredients ?: emptyList<String>()).toTypedArray()) }
+    var showIngredientEditDialog by remember { mutableStateOf<Int?>(null) }
     var private by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(scrollState),
@@ -133,9 +134,9 @@ fun RecipeCreateScreen(placeholder: GetAllRecipes? = null, viewModel: Einkaufsze
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.weight(1f)
         ) {
-            items(ingredients, { it} ) {
-                IngredientCreateItem(it) {
-                    ingredients.remove(it)
+            itemsIndexed(ingredients, { index, item -> item } ) { index, item ->
+                IngredientCreateItem(item, { showIngredientEditDialog = index }) {
+                    ingredients.removeAt(index)
                 }
             }
         }
@@ -182,7 +183,7 @@ fun RecipeCreateScreen(placeholder: GetAllRecipes? = null, viewModel: Einkaufsze
     }
 
     if(showIngredientDialog) {
-        IngredientDialog({
+        IngredientDialog(null, {
             if(it in ingredients) {
                 viewModel.events.add(UIEvent.Alert("Zutat bereits vorhanden"))
             } else {
@@ -190,6 +191,14 @@ fun RecipeCreateScreen(placeholder: GetAllRecipes? = null, viewModel: Einkaufsze
             }
         }) {
             showIngredientDialog = false
+        }
+    }
+
+    if(showIngredientEditDialog != null) {
+        IngredientDialog(ingredients[showIngredientEditDialog!!], {
+            ingredients[showIngredientEditDialog!!] = it
+        }) {
+            showIngredientEditDialog = null
         }
     }
 

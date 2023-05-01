@@ -91,6 +91,7 @@ class EinkaufszettelViewModel(
     val recipeFlow = recipeDataSource.getRecipes()
     val events = mutableStateListOf<UIEvent>()
 
+
     //realtime
     private var shopChangeFlowJob = MutableStateFlow<Job?>(null)
     private var productChangeFlowJob = MutableStateFlow<Job?>(null)
@@ -299,11 +300,11 @@ class EinkaufszettelViewModel(
                 val requiredUsers = (shops.map { (it.authorizedUsers + it.ownerId).filter { id -> id !in currentUserCache } }  + cards.map { it.authorizedUsers?.plus(it.ownerId)?.filter { id -> id !in currentUserCache } ?: emptyList() }).flatten() + recipes.map { it.creatorId }
                 val users = profileApi.retrieveProfilesFromIds(requiredUsers)
                 rootDataSource.insertAll(
-                    products = products,
-                    shops = shops,
-                    cards = cards,
-                    users = users,
-                    recipes = recipes
+                    shops,
+                    cards,
+                    products,
+                    users,
+                    recipes
                 )
             }.onFailure {
                 it.printStackTrace()
@@ -620,6 +621,32 @@ class EinkaufszettelViewModel(
             }.onFailure {
                 Napier.e(it) { "Error while deleting shop" }
                 events.add(UIEvent.Alert("Fehler beim Löschen des Shops. Bitte überprüfe deine Internetverbindung"))
+            }
+        }
+    }
+
+    fun changeShopVisibility(id: Long, visible: Boolean) {
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                shopDataSource.changeShopVisibility(id, visible)
+            }.onSuccess {
+
+            }.onFailure {
+                Napier.e(it) { "Error while changing shop visibility" }
+                events.add(UIEvent.Alert("Fehler beim Ändern der Sichtbarkeit des Shops."))
+            }
+        }
+    }
+
+    fun changeShopPinned(id: Long, pinned: Boolean) {
+        scope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                shopDataSource.changeShopPinned(id, pinned)
+            }.onSuccess {
+
+            }.onFailure {
+                Napier.e(it) { "Error while changing shop pinned" }
+                events.add(UIEvent.Alert("Fehler beim Ändern der Priorität des Shops."))
             }
         }
     }

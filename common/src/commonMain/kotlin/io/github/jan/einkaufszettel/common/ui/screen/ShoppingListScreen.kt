@@ -8,8 +8,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -61,14 +66,16 @@ fun ShoppingListScreen(viewModel: EinkaufszettelViewModel) {
             GridCells.Adaptive(150.dp),
         ) {
             items(shops, { it.id }) {
-                Box(Modifier.padding(8.dp)) {
+                Box(Modifier
+                    .padding(8.dp)
+                ) {
                     ShopCard(
                         shop = it,
                         onClick = {
                             shopState = SelectedShop.Normal(it)
                         },
                         onLongClick = {
-                            shopState = SelectedShop.Edit(it)
+                             shopState = SelectedShop.Edit(it)
                         }
                     )
                 }
@@ -123,7 +130,7 @@ fun ShoppingListScreen(viewModel: EinkaufszettelViewModel) {
             Icon(LocalIcon.Delete, "Löschen")
         })
 
-        if(showDeleteDialog) {
+        if (showDeleteDialog) {
             DeleteDialog(
                 onDismiss = { showDeleteDialog = false },
                 onDelete = {

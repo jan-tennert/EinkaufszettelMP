@@ -16,8 +16,8 @@ import io.github.jan.einkaufszettel.common.ui.icons.Delete
 import io.github.jan.einkaufszettel.common.ui.icons.LocalIcon
 
 @Composable
-fun IngredientCreateItem(text: String, onDelete: () -> Unit) {
-    ElevatedCard {
+fun IngredientCreateItem(text: String, edit: () -> Unit, onDelete: () -> Unit) {
+    ElevatedCard(edit) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {

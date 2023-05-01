@@ -64,13 +64,16 @@ internal class RootDataSourceImpl(
             }
 
             shops.forEach {
+                val oldShop = oldShops.find { oldShop -> oldShop.id == it.id.toLong() }
                 database.shopDtoQueries.insertShop(
                     id = it.id.toLong(),
                     name = it.name,
                     createdAt = it.createdAt,
                     iconUrl = it.iconUrl,
                     ownerId = it.ownerId,
-                    authorizedUsers = it.authorizedUsers
+                    authorizedUsers = it.authorizedUsers,
+                    isVisible = oldShop?.isVisible ?: true,
+                    isPinned = oldShop?.isPinned ?: false
                 )
             }
 

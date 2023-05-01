@@ -18,13 +18,13 @@ import androidx.compose.ui.unit.dp
 import io.github.jan.einkaufszettel.common.data.local.EinkaufszettelSettings
 
 @Composable
-fun IngredientDialog(onAdd: (String) -> Unit, close: () -> Unit) {
+fun IngredientDialog(placeholder: String? = null, onAdd: (String) -> Unit, close: () -> Unit) {
     Dialog(close, title = "Zutaten", darkMode = EinkaufszettelSettings.DarkMode.ON) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(10.dp).background(MaterialTheme.colorScheme.background)
         ) {
-            var name by remember { mutableStateOf("") }
+            var name by remember { mutableStateOf(placeholder ?: "") }
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
