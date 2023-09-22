@@ -2,10 +2,22 @@ package io.github.jan.einkaufszettel.common.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
@@ -16,9 +28,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import einkaufszettel.db.GetAllEntries
-import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
-import io.github.jan.einkaufszettel.common.ui.dialog.EditEntryDialog
-import io.github.jan.einkaufszettel.common.ui.events.AlertDialog
 import io.github.jan.einkaufszettel.common.ui.icons.Delete
 import io.github.jan.einkaufszettel.common.ui.icons.LocalIcon
 import kotlinx.datetime.toJavaInstant
@@ -30,14 +39,11 @@ private val FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun LazyItemScope.ProductEntryCard(product: GetAllEntries, viewModel: EinkaufszettelViewModel) {
-    var loading by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var showEditDialog by remember { mutableStateOf(false) }
-    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(8.dp).combinedClickable(onLongClick = { showEditDialog = true }) {  }.animateItemPlacement()) {
+fun LazyItemScope.ProductEntryCard(product: GetAllEntries, onDoneChange: (Boolean) -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth().padding(8.dp).combinedClickable(onLongClick = onEdit) {  }.animateItemPlacement()) {
         Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
             val formattedDate = remember(product) { FORMATTER.format(LocalDateTime.ofInstant(product.createdAt.toJavaInstant(), ZoneOffset.systemDefault())) }
-            if(loading) {
+            if(false) {
                 Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(modifier = Modifier.size(30.dp))
                 }
@@ -45,16 +51,7 @@ fun LazyItemScope.ProductEntryCard(product: GetAllEntries, viewModel: Einkaufsze
                 Checkbox(
                     checked = product.doneBy != null,
                     onCheckedChange = {
-                        loading = true
-                        if(it) {
-                            viewModel.markEntryAsDone(product.id) {
-                                loading = false
-                            }
-                        } else {
-                            viewModel.markEntryAsNotDone(product.id) {
-                                loading = false
-                            }
-                        }
+                        onDoneChange(it)
                     },
                 )
             }
@@ -76,43 +73,10 @@ fun LazyItemScope.ProductEntryCard(product: GetAllEntries, viewModel: Einkaufsze
                 }, fontSize = 10.sp)
             }
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-                IconButton({
-                    showDeleteDialog = true
-                }) {
+                IconButton(onDelete) {
                     Icon(LocalIcon.Delete, "Löschen")
                 }
             }
-        }
-    }
-
-    if(showDeleteDialog) {
-        AlertDialog(
-            message = "Möchtest du den Eintrag wirklich löschen?",
-            confirmButton = {
-                Button(onClick = {
-                    showDeleteDialog = false
-                    viewModel.deleteEntry(product.id)
-                }) {
-                    Text("Löschen")
-                }
-                Button(
-                    onClick = {
-                        showDeleteDialog = false
-                    },
-                    modifier = Modifier.padding(start = 8.dp)
-                ) {
-                    Text("Abbrechen")
-                }
-            },
-            close = {
-                showDeleteDialog = false
-            }
-        )
-    }
-
-    if(showEditDialog) {
-        EditEntryDialog(product.content, product.id, viewModel) {
-            showEditDialog = false
         }
     }
 }

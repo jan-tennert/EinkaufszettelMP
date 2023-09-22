@@ -10,7 +10,12 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -93,7 +98,8 @@ fun CardScreen(viewModel: EinkaufszettelViewModel) {
                         // adding some zoom limits (min 50%, max 200%)
                         scaleX = maxOf(.5f, minOf(3f, scale.value)),
                         scaleY = maxOf(.5f, minOf(3f, scale.value)),
-                    )
+                    ),
+                original = true
             )
         }
 

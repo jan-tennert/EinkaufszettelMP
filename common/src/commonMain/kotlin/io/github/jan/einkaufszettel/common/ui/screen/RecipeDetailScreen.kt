@@ -26,10 +26,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.mohamedrejeb.richeditor.model.RichTextValue
+import com.mohamedrejeb.richeditor.ui.material3.RichText
 import einkaufszettel.db.GetAllRecipes
 import einkaufszettel.db.ShopDto
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
 import io.github.jan.einkaufszettel.common.data.local.EinkaufszettelSettings
+import io.github.jan.einkaufszettel.common.ui.components.CacheData
 import io.github.jan.einkaufszettel.common.ui.components.CacheImage
 import io.github.jan.einkaufszettel.common.ui.components.IngredientItem
 import io.github.jan.einkaufszettel.common.ui.dialog.CreateEntryDialog
@@ -56,9 +59,13 @@ fun RecipeDetailScreen(recipe: GetAllRecipes, viewModel: EinkaufszettelViewModel
     ) {
         Text(recipe.name, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.displaySmall)
         recipe.imagePath?.let {
-            CacheImage(it, produceImage = {
-                viewModel.supabaseClient.storage["recipes"].downloadAuthenticated(recipe.imagePath)
-            }, modifier = Modifier.padding(8.dp))
+            val url = remember(recipe.imagePath) {
+                viewModel.supabaseClient.storage["recipes"].authenticatedUrl(recipe.imagePath)
+            }
+            CacheImage(
+                data = CacheData.Authenticated(url, viewModel.supabaseClient.gotrue.currentAccessTokenOrNull() ?: ""),
+                modifier = Modifier.padding(8.dp),
+            )
         }
         Spacer(Modifier.weight(1f))
         recipe.steps?.let {
@@ -76,9 +83,13 @@ fun RecipeDetailScreen(recipe: GetAllRecipes, viewModel: EinkaufszettelViewModel
     }
     if(showSteps) {
         Dialog({ showSteps = false}, title = "Anleitung", darkMode = darkMode) {
-            Text(recipe.steps!!, Modifier.background(MaterialTheme.colorScheme.background, RoundedCornerShape(20)).padding(10.dp).verticalScroll(
-                rememberScrollState()
-            ))
+            RichText(
+                remember { RichTextValue.from(recipe.steps!!) },
+                modifier = Modifier.background(MaterialTheme.colorScheme.background, RoundedCornerShape(10))
+                    .padding(10.dp).verticalScroll(
+                    rememberScrollState()
+                ),
+            )
         }
     }
     if(showIngredients) {

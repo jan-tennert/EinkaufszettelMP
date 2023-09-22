@@ -2,6 +2,7 @@ package io.github.jan.einkaufszettel.common.di
 
 import com.russhwolf.settings.ObservableSettings
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.annotations.SupabaseInternal
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.gotrue.GoTrue
 import io.github.jan.supabase.gotrue.GoTrueConfig
@@ -15,6 +16,7 @@ import io.github.jan.supabase.storage.Storage
 import org.koin.dsl.module
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(SupabaseInternal::class)
 val supabaseModule = module {
     single {
         createSupabaseClient(

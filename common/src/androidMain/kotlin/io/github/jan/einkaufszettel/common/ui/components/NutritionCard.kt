@@ -41,9 +41,9 @@ fun NutritionCard(nutrition: NutritionData, close: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             CacheImage(
-                                nutrition.product.imageUrl,
+                                data = CacheData.Public(nutrition.product.imageUrl),
                                 modifier = Modifier.size(70.dp),
-                                { CircularProgressIndicator(Modifier.size(70.dp)) })
+                                loadingFallback = { CircularProgressIndicator(Modifier.size(70.dp)) })
                             Text(
                                 nutrition.product.productName,
                                 modifier = Modifier.padding(start = 7.dp)

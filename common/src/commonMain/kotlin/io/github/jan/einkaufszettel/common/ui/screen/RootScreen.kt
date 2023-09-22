@@ -22,7 +22,7 @@ import io.github.jan.supabase.gotrue.SessionStatus
 @Composable
 fun RootScreen(viewModel: EinkaufszettelViewModel) {
     val os = remember {
-        if(CurrentPlatformTarget == PlatformTarget.DESKTOP) System.getProperty("os.name") else ""
+        if(CurrentPlatformTarget == PlatformTarget.JVM) System.getProperty("os.name") else ""
     }
     val version by viewModel.latestVersion.collectAsState()
     var ignoreVersion by remember { mutableStateOf(false) }
@@ -50,7 +50,7 @@ fun RootScreen(viewModel: EinkaufszettelViewModel) {
             val profileStatus by viewModel.profileStatus.collectAsState()
             LaunchedEffect(Unit) {
                 if(profileStatus !is ProfileStatus.Available) viewModel.retrieveProfile()
-                if(CurrentPlatformTarget == PlatformTarget.DESKTOP) {
+                if(CurrentPlatformTarget == PlatformTarget.JVM) {
                     viewModel.retrieveAll()
                     viewModel.retrieveProfile(false)
                     viewModel.connectToRealtime()

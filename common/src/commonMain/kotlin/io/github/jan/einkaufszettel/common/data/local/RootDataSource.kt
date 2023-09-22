@@ -73,7 +73,7 @@ internal class RootDataSourceImpl(
                     ownerId = it.ownerId,
                     authorizedUsers = it.authorizedUsers,
                     isVisible = oldShop?.isVisible ?: true,
-                    isPinned = oldShop?.isPinned ?: false
+                    isPinned = oldShop?.isPinned ?: true
                 )
             }
 

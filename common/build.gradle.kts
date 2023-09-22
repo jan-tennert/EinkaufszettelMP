@@ -12,6 +12,10 @@ plugins {
 group = "io.github.jan.einkaufszettel"
 version = "1.0-SNAPSHOT"
 
+repositories {
+    maven { url = uri("https://jitpack.io") }
+}
+
 kotlin {
     android()
     jvm("desktop") {
@@ -45,8 +49,12 @@ kotlin {
                 api("com.russhwolf:multiplatform-settings-no-arg:${Versions.SETTINGS}")
                 api("com.russhwolf:multiplatform-settings-coroutines:${Versions.SETTINGS}")
                 api("com.arkivanov.essenty:instance-keeper:${Versions.ESSENTY}")
-                api("io.ktor:ktor-client-cio:${Versions.KTOR}")
+                api("io.ktor:ktor-client-okhttp:${Versions.KTOR}")
                 api("io.github.g0dkar:qrcode-kotlin:${Versions.QR_CODE}")
+                implementation("com.github.stevdza-san:OneTapCompose:1.0.3")
+                implementation("com.mohamedrejeb.richeditor:richeditor-compose:${Versions.RICH_TEXT}")
+                implementation("io.ktor:ktor-client-logging:${Versions.KTOR}")
+                api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
             }
         }
         val commonTest by getting {
@@ -69,10 +77,11 @@ kotlin {
                 api("androidx.camera:camera-lifecycle:${Versions.CAMERAX}")
                 api("androidx.camera:camera-view:${Versions.CAMERAX}")
                 api("com.google.mlkit:barcode-scanning:${Versions.BARCODE}")
-                api("io.insert-koin:koin-androidx-compose:3.4.3")
+                api("io.insert-koin:koin-androidx-compose:3.5.0")
+                api("io.coil-kt:coil-compose:2.4.0")
             }
         }
-        val androidTest by getting
+        val androidUnitTest by getting
         val desktopMain by getting {
             dependencies {
                 api(compose.preview)
@@ -84,7 +93,8 @@ kotlin {
 }
 
 android {
-    compileSdk = 33
+    compileSdk = 34
+    namespace = "io.github.jan.shopping.common"
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].apply {
         res.srcDirs("src/androidMain/res", "src/commonMain/resources")
@@ -100,8 +110,13 @@ android {
         abortOnError = false
     }
     buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
+        release {
+            isMinifyEnabled = true
+        //    isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro")
         }
         debug {
             //  isMinifyEnabled = true

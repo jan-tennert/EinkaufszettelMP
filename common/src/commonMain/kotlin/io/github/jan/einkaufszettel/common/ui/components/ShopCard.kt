@@ -23,9 +23,14 @@ fun ShopCard(shop: ShopDto, modifier: Modifier = Modifier, onLongClick: () -> Un
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                CacheImage(url = shop.iconUrl, modifier = Modifier.size(150.dp)) {
-                    CircularProgressIndicator(modifier = Modifier.size(150.dp))
-                }
+                CacheImage(
+                    data = CacheData.Public(shop.iconUrl),
+                    modifier = Modifier.size(150.dp),
+                    loadingFallback = {
+                        CircularProgressIndicator(modifier = Modifier.size(150.dp))
+                    },
+                    size = CacheSize(150, 150)
+                )
                 Text(shop.name)
             }
         }

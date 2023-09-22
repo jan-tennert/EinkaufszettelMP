@@ -120,7 +120,7 @@ internal class ShopDataSourceImpl(
                 ownerId = shop.ownerId,
                 authorizedUsers = shop.authorizedUsers,
                 isVisible = true,
-                isPinned = false
+                isPinned = true
             )
         }
     }
@@ -146,7 +146,7 @@ internal class ShopDataSourceImpl(
                         ownerId = it.ownerId,
                         authorizedUsers = it.authorizedUsers,
                         isVisible = oldShop?.isVisible ?: true,
-                        isPinned = oldShop?.isPinned ?: false
+                        isPinned = oldShop?.isPinned ?: true
                     )
                 }
                 toDelete.forEach {

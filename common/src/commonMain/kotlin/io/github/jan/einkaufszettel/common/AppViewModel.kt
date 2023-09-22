@@ -1,8 +1,8 @@
 package io.github.jan.einkaufszettel.common
 
 import androidx.compose.runtime.mutableStateListOf
+import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.instancekeeper.InstanceKeeper
-import io.github.aakira.napier.Napier
 import io.github.jan.einkaufszettel.common.data.local.CardDataSource
 import io.github.jan.einkaufszettel.common.data.local.ClipboardManager
 import io.github.jan.einkaufszettel.common.data.local.EinkaufszettelSettings
@@ -43,6 +43,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -84,6 +86,15 @@ class EinkaufszettelViewModel(
     val nutritionData = MutableStateFlow<NutritionData?>(null)
     val shopFlow = shopDataSource.getAllShops()
     val productEntryFlow = productEntryDataSource.getAllEntries()
+    val homeFlow = shopFlow.combine(productEntryFlow) { shops, products ->
+        shops
+            .filter { // filter out shops that have no products
+                products.any { product -> product.shopId == it.id }
+            } // map the shops and products to a pair
+            .sortedBy { it.isPinned }
+            .map { it to products.filter { product -> product.shopId == it.id } }
+    }
+        .flowOn(Dispatchers.Default)
     val localUserFlow = localUserDataSource.getUsers()
     val downloadProgress = MutableStateFlow(0f)
     val latestVersion = MutableStateFlow(0)
@@ -146,10 +157,14 @@ class EinkaufszettelViewModel(
 
     fun disconnectFromRealtime() {
         scope.launch {
-            realtimeChannel.leave()
-            supabaseClient.realtime.disconnect()
-            productChangeFlowJob.value?.cancel()
-            shopChangeFlowJob.value?.cancel()
+            kotlin.runCatching {
+                realtimeChannel.leave()
+                supabaseClient.realtime.disconnect()
+                productChangeFlowJob.value?.cancel()
+                shopChangeFlowJob.value?.cancel()
+                cardChangeFlowJob.value?.cancel()
+                recipeChangeFlowJob.value?.cancel()
+            }
         }
     }
 
@@ -168,7 +183,7 @@ class EinkaufszettelViewModel(
             kotlin.runCatching {
                 supabaseClient.gotrue.loginWith(IDToken) {
                     this.idToken = idToken
-                    clientId = "178705897393-64ql7tu06vs2bdlr0s1l5a42otbfe7or.apps.googleusercontent.com"
+       //             this. = "178705897393-1o04rilnoit4a6ls84d2751a3jvibbij.apps.googleusercontent.com"
                     provider = Google
                 }
             }.onSuccess {
@@ -223,7 +238,7 @@ class EinkaufszettelViewModel(
     fun changePasswordTo(password: String) {
         scope.launch {
             kotlin.runCatching {
-                supabaseClient.gotrue.modifyUser(Email) {
+                supabaseClient.gotrue.modifyUser {
                     this.password = password
                 }
             }.onSuccess {
@@ -241,7 +256,7 @@ class EinkaufszettelViewModel(
             kotlin.runCatching {
                 profileApi.retrieveProfile(supabaseClient.gotrue.currentSessionOrNull()?.user?.id ?: throw IllegalStateException("Session shouldn't be null here"))
             }.onFailure {
-                Napier.e(it) { "Failed to retrieve profile" }
+                Logger.e(it) { "Failed to retrieve profile" }
                 if(load) _profileStatus.value = ProfileStatus.NotExisting
             }.onSuccess {
                 settings.setProfile(it)
@@ -256,7 +271,7 @@ class EinkaufszettelViewModel(
             kotlin.runCatching {
                 profileApi.createProfile(supabaseClient.gotrue.currentSessionOrNull()?.user?.id ?: throw IllegalStateException("Id shouldn't be null here"), username)
             }.onFailure {
-                Napier.e(it) { "Failed to create profile" }
+                Logger.e(it) { "Failed to create profile" }
                 _profileStatus.value = ProfileStatus.NotExisting
             }.onSuccess {
                 settings.setProfile(it)
@@ -270,7 +285,7 @@ class EinkaufszettelViewModel(
             kotlin.runCatching {
                 profileApi.updateProfile(id ?: throw IllegalStateException("Id shouldn't be null here"), username)
             }.onFailure {
-                Napier.e(it) { "Failed to update username" }
+                Logger.e(it) { "Failed to update username" }
                 events.add(UIEvent.Alert("Fehler beim Aktualisieren des Benutzernamens"))
             }.onSuccess {
                 settings.setProfile(RemoteUser(id!!, username))
@@ -281,8 +296,10 @@ class EinkaufszettelViewModel(
 
     fun logout() {
         scope.launch(Dispatchers.IO) {
-            supabaseClient.gotrue.invalidateSession()
-            settings.setProfile(null)
+            kotlin.runCatching {
+                supabaseClient.gotrue.logout()
+                settings.setProfile(null)
+            }
         }
     }
 
@@ -393,7 +410,9 @@ class EinkaufszettelViewModel(
             val currentCache = localUserDataSource.retrieveAllUsers().map { it.id }
             val newUsers = authorizedUsers.filter { it !in currentCache  } + owner
             if(newUsers.isNotEmpty()) {
-                retrieveProfiles(newUsers)
+                kotlin.runCatching {
+                    retrieveProfiles(newUsers)
+                }
             }
         }
     }
@@ -517,7 +536,7 @@ class EinkaufszettelViewModel(
     }
 
     //actual shopping list
-    fun markEntryAsDone(id: Long, callback: () -> Unit) {
+    fun markEntryAsDone(id: Long, callback: () -> Unit = {}) {
         val ownUserId = supabaseClient.gotrue.currentSessionOrNull()?.user?.id ?: throw IllegalStateException("Session shouldn't be null here")
         scope.launch(Dispatchers.IO) {
             kotlin.runCatching {
@@ -533,7 +552,7 @@ class EinkaufszettelViewModel(
         }
     }
 
-    fun markEntryAsNotDone(id: Long, callback: () -> Unit) {
+    fun markEntryAsNotDone(id: Long, callback: () -> Unit = {}) {
         scope.launch(Dispatchers.IO) {
             kotlin.runCatching {
                 productsApi.markAsUndone(id.toInt())
@@ -578,7 +597,7 @@ class EinkaufszettelViewModel(
             }.onSuccess {
                 productEntryDataSource.editEntryContent(id, content)
             }.onFailure {
-                Napier.e(it) { "Error while editing entry" }
+                Logger.e(it) { "Error while editing entry" }
                 events.add(UIEvent.Alert("Fehler beim Bearbeiten des Produkts. Bitte überprüfe deine Internetverbindung"))
             }
         }
@@ -593,7 +612,7 @@ class EinkaufszettelViewModel(
             }.onSuccess {
                 shopDataSource.insertShop(it)
             }.onFailure {
-                Napier.e(it) { "Error while creating shop" }
+                Logger.e(it) { "Error while creating shop" }
                 events.add(UIEvent.Alert("Fehler beim Erstellen des Shops. Bitte überprüfe deine Internetverbindung"))
             }
         }
@@ -606,7 +625,7 @@ class EinkaufszettelViewModel(
             }.onSuccess {
                 shopDataSource.insertShop(it)
             }.onFailure {
-                Napier.e(it) { "Error while editing shop" }
+                Logger.e(it) { "Error while editing shop" }
                 events.add(UIEvent.Alert("Fehler beim Bearbeiten des Shops. Bitte überprüfe deine Internetverbindung"))
             }
         }
@@ -619,7 +638,7 @@ class EinkaufszettelViewModel(
             }.onSuccess {
                 shopDataSource.deleteById(id)
             }.onFailure {
-                Napier.e(it) { "Error while deleting shop" }
+                Logger.e(it) { "Error while deleting shop" }
                 events.add(UIEvent.Alert("Fehler beim Löschen des Shops. Bitte überprüfe deine Internetverbindung"))
             }
         }
@@ -632,7 +651,7 @@ class EinkaufszettelViewModel(
             }.onSuccess {
 
             }.onFailure {
-                Napier.e(it) { "Error while changing shop visibility" }
+                Logger.e(it) { "Error while changing shop visibility" }
                 events.add(UIEvent.Alert("Fehler beim Ändern der Sichtbarkeit des Shops."))
             }
         }
@@ -645,7 +664,7 @@ class EinkaufszettelViewModel(
             }.onSuccess {
 
             }.onFailure {
-                Napier.e(it) { "Error while changing shop pinned" }
+                Logger.e(it) { "Error while changing shop pinned" }
                 events.add(UIEvent.Alert("Fehler beim Ändern der Priorität des Shops."))
             }
         }
@@ -660,7 +679,7 @@ class EinkaufszettelViewModel(
             }.onSuccess {
                 cardDataSource.insertCard(it)
             }.onFailure {
-                Napier.e(it) { "Error while creating card" }
+                Logger.e(it) { "Error while creating card" }
                 events.add(UIEvent.Alert("Fehler beim Erstellen der Karte. Bitte überprüfe deine Internetverbindung"))
             }
         }
@@ -673,7 +692,7 @@ class EinkaufszettelViewModel(
             }.onSuccess {
                 cardDataSource.insertCard(it)
             }.onFailure {
-                Napier.e(it) { "Error while editing card" }
+                Logger.e(it) { "Error while editing card" }
                 events.add(UIEvent.Alert("Fehler beim Bearbeiten der Karte. Bitte überprüfe deine Internetverbindung"))
             }
         }
@@ -686,7 +705,7 @@ class EinkaufszettelViewModel(
             }.onSuccess {
                 cardDataSource.deleteCardById(id)
             }.onFailure {
-                Napier.e(it) { "Error while deleting card" }
+                Logger.e(it) { "Error while deleting card" }
                 events.add(UIEvent.Alert("Fehler beim Löschen der Karte. Bitte überprüfe deine Internetverbindung"))
             }
         }
@@ -700,7 +719,7 @@ class EinkaufszettelViewModel(
             }.onSuccess {
                 if(it == null) events.add(UIEvent.Alert("Produkt nicht gefunden")) else nutritionData.value = it
             }.onFailure {
-                Napier.e(it) { "Error while retrieving nutrition data" }
+                Logger.e(it) { "Error while retrieving nutrition data" }
                 events.add(UIEvent.Alert("Fehler beim Abrufen des Produkts. Bitte überprüfe deine Internetverbindung"))
             }
         }
@@ -721,7 +740,7 @@ class EinkaufszettelViewModel(
             }.onSuccess {
                 latestVersion.value = it
             }.onFailure {
-                Napier.e(it) { "Error while retrieving latest version" }
+                Logger.e(it) { "Error while retrieving latest version" }
             }
         }
     }
@@ -736,7 +755,7 @@ class EinkaufszettelViewModel(
                 println("done???")
                 updateInstaller.install(it)
             }.onFailure {
-                Napier.e(it) { "Error while downloading latest version" }
+                Logger.e(it) { "Error while downloading latest version" }
             }
         }
     }

@@ -1,41 +1,59 @@
 package io.github.jan.einkaufszettel.common.ui.components
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import io.github.jan.einkaufszettel.common.toComposeImage
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import coil.size.Size
 
 @Composable
 actual fun CacheImage(
-    fileName: String,
+    data: CacheData,
     modifier: Modifier,
-    loadingFallback: @Composable (() -> Unit)?,
-    produceImage: suspend () -> ByteArray
+    size: CacheSize,
+    loadingFallback: @Composable (() -> Unit)?
 ) {
-    val cacheDir = LocalContext.current.cacheDir
-    val bitmap by produceState<ImageBitmap?>(null) {
-        launch(Dispatchers.IO) {
-            runCatching {
-                val path = cacheDir.resolve(fileName)
-                value = if(path.exists()) {
-                    path.readBytes().toComposeImage()
-                } else {
-                    val bytes = produceImage()
-                    path.writeBytes(bytes)
-                    bytes.toComposeImage()
-                }
-            }
+    val context = LocalContext.current
+    val imageData = remember(data, size) {
+        when(data) {
+            is CacheData.Authenticated -> ImageRequest.Builder(context)
+                .data(data.url)
+                .addHeader("Authorization", "Bearer ${data.bearerToken}")
+                .size(size.size)
+                .build()
+            is CacheData.Public -> ImageRequest.Builder(context)
+                .data(data.url)
+                .size(size.size)
+                .build()
         }
     }
-    if(bitmap == null) {
-        loadingFallback?.invoke()
-    } else {
-        Image(bitmap = bitmap!!, contentDescription = null, modifier = modifier)
+    var loading by remember { mutableStateOf(true) }
+    Box {
+        AsyncImage(
+            model = imageData,
+            modifier = modifier,
+            contentDescription = null,
+            onLoading = {
+                loading = true
+            },
+            onSuccess = {
+                loading = false
+            }
+        )
+        if(loading) {
+            loadingFallback?.invoke()
+        }
     }
+}
+
+actual class CacheSize actual constructor(width: Int, height: Int) {
+
+    val size = if(width == -1) Size.ORIGINAL else Size(width, height)
+
 }

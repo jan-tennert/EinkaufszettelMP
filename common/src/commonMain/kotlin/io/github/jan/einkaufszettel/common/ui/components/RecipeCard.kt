@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -21,6 +22,7 @@ import einkaufszettel.db.GetAllRecipes
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
 import io.github.jan.einkaufszettel.common.ui.icons.LocalIcon
 import io.github.jan.einkaufszettel.common.ui.icons.QuestionMark
+import io.github.jan.supabase.gotrue.gotrue
 import io.github.jan.supabase.storage.storage
 
 @Composable
@@ -50,11 +52,15 @@ fun RecipeCard(
                 },
             )
             if (recipe.imagePath != null) {
-                CacheImage(recipe.imagePath, produceImage = {
-                    viewModel.supabaseClient.storage["recipes"].downloadAuthenticated(recipe.imagePath)
-                }, modifier = Modifier.size(90.dp).padding(8.dp), loadingFallback = {
-                    CircularProgressIndicator(modifier = Modifier.size(90.dp).padding(8.dp))
-                })
+                val url = remember(recipe) { viewModel.supabaseClient.storage["recipes"].authenticatedUrl(recipe.imagePath) }
+                CacheImage(
+                    data = CacheData.Authenticated(url, viewModel.supabaseClient.gotrue.currentAccessTokenOrNull() ?: ""),
+                    modifier = Modifier.size(90.dp).padding(8.dp),
+                    loadingFallback = {
+                        CircularProgressIndicator(modifier = Modifier.size(90.dp).padding(8.dp))
+                    },
+                    size = CacheSize(90, 90)
+                )
             } else {
                 Icon(
                     LocalIcon.QuestionMark,

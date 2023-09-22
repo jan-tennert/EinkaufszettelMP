@@ -21,7 +21,9 @@ import androidx.compose.ui.unit.dp
 import einkaufszettel.db.ShopDto
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
 import io.github.jan.einkaufszettel.common.ui.components.ActionButton
+import io.github.jan.einkaufszettel.common.ui.components.CacheData
 import io.github.jan.einkaufszettel.common.ui.components.CacheImage
+import io.github.jan.einkaufszettel.common.ui.components.CacheSize
 import io.github.jan.einkaufszettel.common.ui.components.ShopCard
 import io.github.jan.einkaufszettel.common.ui.dialog.DeleteDialog
 import io.github.jan.einkaufszettel.common.ui.icons.Add
@@ -116,7 +118,7 @@ fun ShoppingListScreen(viewModel: EinkaufszettelViewModel) {
             viewModel = viewModel,
             oldName = shop.name,
             oldAuthorizedUserIds = shop.authorizedUsers,
-            oldImage = { CacheImage(shop.iconUrl, Modifier.size(100.dp)) },
+            oldImage = { CacheImage(data = CacheData.Public(shop.iconUrl), Modifier.size(100.dp), size = CacheSize(150, 150)) },
             modifyImageEnabled = false,
             create = { name, _, authorizedUsers ->
                 viewModel.editShop(shop.id, name, authorizedUsers)

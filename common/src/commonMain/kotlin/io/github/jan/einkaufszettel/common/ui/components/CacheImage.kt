@@ -3,27 +3,20 @@ package io.github.jan.einkaufszettel.common.ui.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import io.github.jan.supabase.storage.BucketApi
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.request.*
+import io.ktor.client.HttpClient
 
 internal val HTTP_CLIENT = HttpClient()
 
-@Composable
-expect fun CacheImage(fileName: String, modifier: Modifier = Modifier, loadingFallback: @Composable (() -> Unit)? = null, produceImage: suspend () -> ByteArray)
+sealed interface CacheData {
+    val url: String
 
-@Composable
-fun CacheImage(url: String, modifier: Modifier = Modifier, loadingFallback: @Composable (() -> Unit)? = null) = CacheImage(url.substringAfterLast("/"), modifier, loadingFallback, produceImage = {
-    HTTP_CLIENT.get(url).body()
-})
-
-@Composable
-fun BucketApi.CacheImageAuthenticated(path: String, modifier: Modifier = Modifier, loadingFallback: @Composable (() -> Unit)? = null) = CacheImage(path.substringAfterLast("/"), modifier, loadingFallback) {
-    downloadAuthenticated(path)
+    data class Authenticated(override val url: String, val bearerToken: String) : CacheData
+    @JvmInline
+    value class Public(override val url: String) : CacheData
 }
 
+expect class CacheSize(width: Int, height: Int)
+
+
 @Composable
-fun BucketApi.CacheImagePublic(path: String, modifier: Modifier = Modifier, loadingFallback: @Composable (() -> Unit)? = null) = CacheImage(path.substringAfterLast("/"), modifier, loadingFallback) {
-    downloadPublic(path)
-}
+expect fun CacheImage(data: CacheData, modifier: Modifier = Modifier, size: CacheSize = CacheSize(-1, -1), loadingFallback: @Composable (() -> Unit)? = null)

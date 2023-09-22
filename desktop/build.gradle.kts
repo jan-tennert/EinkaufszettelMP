@@ -38,7 +38,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Rpm, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "Einkaufszettel"
-            packageVersion = "1.0.11"
+            packageVersion = "1.0.12"
             modules("java.sql")
 
             val iconsRoot = project.file("src/jvmMain/resources")
@@ -46,6 +46,7 @@ compose.desktop {
                 iconFile.set(iconsRoot.resolve("orders.ico"))
                 shortcut = true
                 perUserInstall = true
+                upgradeUuid = "6270a6b1-b388-47a7-afaf-7c064c4e5099"
             }
             linux {
                 shortcut = true

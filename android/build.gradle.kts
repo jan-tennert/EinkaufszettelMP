@@ -22,7 +22,8 @@ kotlin {
 }
 
 android {
-    compileSdk = 33
+    compileSdk = 34
+    namespace = "io.github.jan.shopping"
     defaultConfig {
         applicationId = "io.github.jan.shopping"
         minSdk = 26
@@ -34,9 +35,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-            signingConfig = null
+        release {
+            isMinifyEnabled = true
+            isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro")
         }
         debug {
             //  isMinifyEnabled = true

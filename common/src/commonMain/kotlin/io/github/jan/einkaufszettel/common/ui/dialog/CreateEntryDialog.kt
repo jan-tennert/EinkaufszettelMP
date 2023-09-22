@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.unit.dp
 import io.github.jan.einkaufszettel.common.EinkaufszettelViewModel
+import io.github.jan.einkaufszettel.common.LocalThemeSettings
 import io.github.jan.einkaufszettel.common.data.local.EinkaufszettelSettings
 import io.github.jan.einkaufszettel.common.handleEnter
 import io.github.jan.einkaufszettel.common.ui.theme.topPadding
@@ -60,8 +61,8 @@ fun CreateEntryDialog(shopId: Long, viewModel: EinkaufszettelViewModel, placehol
 }
 
 @Composable
-fun EditEntryDialog(oldContent: String, shopId: Long, viewModel: EinkaufszettelViewModel, close: () -> Unit) {
-    val darkMode by viewModel.darkMode.collectAsState(EinkaufszettelSettings.DarkMode.NOT_SET)
+fun EditEntryDialog(oldContent: String, onEdit: (content: String) -> Unit, close: () -> Unit) {
+    val darkMode = LocalThemeSettings.current.darkMode
     Dialog(close, "Eintrag bearbeiten", darkMode) {
         Box(
             modifier = Modifier.background(MaterialTheme.colorScheme.background, RoundedCornerShape(20.dp)),
@@ -77,15 +78,15 @@ fun EditEntryDialog(oldContent: String, shopId: Long, viewModel: EinkaufszettelV
                     onValueChange = { content = it },
                     singleLine = true,
                     label = { Text("Eintrag") },
-                    keyboardActions = KeyboardActions(onDone = { viewModel.editEntry(shopId, content); close() }),
+                    keyboardActions = KeyboardActions(onDone = { onEdit(content); close() }),
                     modifier = Modifier.onPreviewKeyEvent {
-                        it.handleEnter { viewModel.editEntry(shopId, content); close() }
+                        it.handleEnter { onEdit(content); close() }
                         false
                     }
                 )
                 Button(
                     onClick = {
-                        viewModel.editEntry(shopId, content)
+                        onEdit(content)
                         close()
                     },
                     modifier = Modifier.padding(top = MaterialTheme.topPadding)
